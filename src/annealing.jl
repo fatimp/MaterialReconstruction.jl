@@ -6,13 +6,10 @@ function sumcost(tracker1 :: CorrelationTracker,
                      +, tracked_data(tracker1))
 end
 
-permute!(tr :: CorrelationTracker, idx1 :: CartesianIndex, idx2 :: CartesianIndex) =
-    tr[idx1], tr[idx2] = tr[idx2], tr[idx1]
-
-function annealing_step(furnace     :: Furnace;
-                        cooldown    :: Float64 = 0.99999,
-                        cost        :: Function = euclid_mean,
-                        permutation :: Function = random_permutation)
+function annealing_step(furnace      :: Furnace;
+                        cooldown     :: Float64 = 0.99999,
+                        cost         :: Function = euclid_mean,
+                        modification :: Function = random_modification)
     # Some statistics
     rejected = false
     accepted = false
@@ -20,19 +17,19 @@ function annealing_step(furnace     :: Furnace;
     # Compute the cost function which we are trying to minimize
     c1 = sumcost(furnace.system, furnace.target, cost)
 
-    # Pick two points and swap them
-    idx1, idx2 = permutation(furnace.system)
-    permute!(furnace.system, idx1, idx2)
+    # Pick a point and swap phase
+    idx = modification(furnace.system)
+    furnace.system[idx] = 1 - furnace.system[idx]
 
     # Compute the new value for the cost function
     c2 = sumcost(furnace.system, furnace.target, cost)
 
-    # if c1 < c2 the swap is accepted
+    # if c1 < c2 the modification is accepted
     if c2 > c1
         threshold = exp(-(c2 - c1) / furnace.temperature)
         if rand(Float64) > threshold
             # Poor man's reject.
-            permute!(furnace.system, idx1, idx2)
+            furnace.system[idx] = 1 - furnace.system[idx]
             @assert c1 ≈ sumcost(furnace.system, furnace.target, cost)
             rejected = true
         end

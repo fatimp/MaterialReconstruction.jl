@@ -3,7 +3,7 @@ using CorrelationFunctions.Directional
 using CorrelationTrackers
 using StatsBase: mean
 
-include("permutations.jl")
+include("modifications.jl")
 include("furnace.jl")
 include("cost.jl")
 include("annealing.jl")
@@ -14,8 +14,8 @@ export
     euclid_directional,
     euclid_mean_weighted,
     euclid_directional_weighted,
-    # Permutation functions
-    random_permutation,
+    # Modification functions
+    random_modification,
     # Annealing
     Furnace,
     annealing_step
