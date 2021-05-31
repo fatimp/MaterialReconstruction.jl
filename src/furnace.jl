@@ -9,6 +9,14 @@ struct Furnace{T, N}
     accepted    :: Int
 end
 
+"""
+    Furnace(system :: CorrelationTracker, target :: CorrelationTracker; T0)
+
+Initialize a furnace (an object which is used in annealing
+process). `system` is a system being reconstructed. `target` holds
+desired values of correlation functions. `T0` is an initial
+temperature of a furnace.
+"""
 Furnace(system :: CorrelationTracker{T, N},
         target :: CorrelationTracker{T, N};
         T0     :: Float64) where {T, N} =

@@ -19,8 +19,12 @@ function initialize_tracker(array  :: AbstractArray{T, N},
                                       len        = len)
 end
 
-# Initialize a system for annealing with random data, but preserving
-# porosity of the target
+"""
+    initialize_random(target :: CorrelationTracker, shape)
+
+Initialize a system for the annealing proceduce. The system will be
+filled with random data, but porosity of the target is preserved.
+"""
 function initialize_random(target :: CorrelationTracker{T, N},
                            shape  :: NTuple{N, Int}) where {T, N}
     # The porosity may be already calculated as $S^1_2(0)$ or

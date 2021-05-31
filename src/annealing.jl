@@ -6,6 +6,21 @@ function sumcost(tracker1 :: CorrelationTracker,
                      +, tracked_data(tracker1))
 end
 
+"""
+    annealing_step(furnace; cooldown = 0.99999, cost = euclid_mean[, modifier])
+
+Perform one step of annealing procedure. `cooldown` is a parameter
+defining how fast the furnace will loose temperature. `cost`
+determines a function we want to minimize. `modifier` determines which
+small modifications are made to the system during the step.
+
+**NB:** The updated state of the annealing process is returned by this
+function as a new `Furnace` object. Do not discard it.
+
+See also: [`euclid_mean`](@ref), [`euclid_directional`](@ref),
+[`euclid_mean_weighted`](@ref), [`euclid_directional_weighted`](@ref),
+[`RandomSwapper`](@ref), [`RandomFlipper`](@ref).
+"""
 function annealing_step(furnace  :: Furnace;
                         cooldown :: Float64          = 0.99999,
                         cost     :: Function         = euclid_mean,
