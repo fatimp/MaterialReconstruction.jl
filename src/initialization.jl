@@ -2,21 +2,12 @@ random_index(shape) = CartesianIndex((rand(1:s) for s in shape)...)
 
 function initialize_tracker(array  :: AbstractArray{T, N},
                             target :: CorrelationTracker{T, N}) where {T, N}
-    # KLUDGE: Maybe add a function to return directions and length?
-    dirs = []
-    len  = 0
-    for data in tracked_data(target)
-        dirs = target |> data |> directions
-        len  = target |> data |> length
-        break
-    end
-
     # Create CorrelationTracker for the system being annealed
-    system = CorrelationTracker{T, N}(array;
-                                      tracking   = target |> tracked_data |> collect,
-                                      periodic   = target.periodic,
-                                      directions = dirs,
-                                      len        = len)
+    return CorrelationTracker{T, N}(array;
+                                    tracking   = target |> tracked_data |> collect,
+                                    periodic   = target.periodic,
+                                    directions = tracked_directions(target),
+                                    len        = tracked_length(target))
 end
 
 """
