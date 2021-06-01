@@ -2,6 +2,7 @@ module MaterialReconstruction
 using CorrelationFunctions.Directional
 using CorrelationTrackers
 using StatsBase: mean
+using Base.Iterators
 
 include("modifiers.jl")
 include("initialization.jl")
@@ -18,7 +19,9 @@ export
     # Initialization
     initialize_random,
     # Modifier structures
-    AbstractModifier, RandomSwapper, RandomFlipper,
+    AbstractModifier,
+    RandomSwapper, RandomFlipper,
+    InterfaceSwapper,
     # Annealing
     Furnace, annealing_step
 
