@@ -4,6 +4,20 @@ steps are performed during an annealing process.
 """
 abstract type AbstractModifier end
 
+# ? FIXME: Maybe invent some trait here, like ModifierType?
+function rollback!(modifier :: AbstractModifier,
+                   state    :: Tuple{CartesianIndex, CartesianIndex})
+    tracker = modifier.tracker
+    index1, index2 = state
+    tracker[index1], tracker[index2] = tracker[index2], tracker[index1]
+end
+
+function rollback!(modifier :: AbstractModifier,
+                   state    :: CartesianIndex)
+    tracker = modifier.tracker
+    tracker[state] = 1 - tracker[state]
+end
+
 """
     RandomSwapper(tracker :: CorrelationTracker)
 
@@ -31,12 +45,6 @@ function modify!(modifier :: RandomSwapper)
     end
 end
 
-function rollback!(modifier :: RandomSwapper, state :: Tuple{CartesianIndex, CartesianIndex})
-    tracker = modifier.tracker
-    index1, index2 = state
-    tracker[index1], tracker[index2] = tracker[index2], tracker[index1]
-end
-
 """
     RandomFlipper(tracker :: CorrelationTracker)
 
@@ -56,9 +64,4 @@ function modify!(modifier :: RandomFlipper)
 
     tracker[index] = 1 - tracker[index]
     return index
-end
-
-function rollback!(modifier :: RandomFlipper, state :: CartesianIndex)
-    tracker = modifier.tracker
-    tracker[state] = 1 - tracker[state]
 end
