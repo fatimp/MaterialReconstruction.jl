@@ -21,7 +21,7 @@ export
     # Modifier structures
     AbstractModifier,
     RandomSwapper, RandomFlipper,
-    InterfaceSwapper,
+    InterfaceSwapper, InterfaceFlipper,
     # Annealing
     Furnace, annealing_step
 

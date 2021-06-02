@@ -108,7 +108,7 @@ Create `InterfaceSwapper` modifier which will swap voxels of different
 phases which lie at random points of the interface.
 
 See also: [`RandomSwapper`](@ref), [`RandomFlipper`](@ref),
-[`AbstractModifier`](@ref).
+[`InterfaceFlipper`](@ref), [`AbstractModifier`](@ref).
 """
 struct InterfaceSwapper <: AbstractModifier
     tracker :: CorrelationTracker
@@ -135,6 +135,39 @@ function modify!(modifier :: InterfaceSwapper)
            checkbounds(Bool, tracker, Tuple(idx2)...)
             tracker[idx1], tracker[idx2] = tracker[idx2], tracker[idx1]
             return idx1, idx2
+        end
+    end
+end
+
+"""
+    InterfaceFlipper(tracker :: CorrelationTracker)
+
+Create `InterfaceFlipper` modifier which will flip phase of a random
+voxel on an interface of a two-phase system during an annealing step.
+
+See also: [`RandomSwapper`](@ref), [`RandomFlipper`](@ref),
+[`InterfaceSwapper`](@ref), [`AbstractModifier`](@ref).
+"""
+struct InterfaceFlipper <: AbstractModifier
+    tracker :: CorrelationTracker
+end
+
+function modify!(modifier :: InterfaceFlipper)
+    tracker = modifier.tracker
+    shape = size(tracker)
+
+    while true
+        rndidx = Tuple(rand(1:x) for x in shape)
+        ray = RandomLineIterator(rndidx)
+        start_phase = tracker[rndidx...]
+
+        cont(x :: CartesianIndex) =
+            checkbounds(Bool, tracker, Tuple(x)...) && tracker[x] == start_phase
+        index = dropwhile(cont, ray) |> first
+
+        if checkbounds(Bool, tracker, Tuple(index)...)
+            tracker[index] = 1 - tracker[index]
+            return index
         end
     end
 end
