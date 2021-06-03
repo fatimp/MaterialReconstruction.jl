@@ -1,7 +1,7 @@
 """
-    annealing_step(furnace; cooldown = 0.99999, cost = euclid_mean[, modifier])
+    annealing_step(furnace[; cooldown][, cost][, modifier])
 
-Perform one step of annealing procedure. `cooldown` is a parameter
+Perform one step of annealing procedure. `cooldown` is a function
 defining how fast the furnace will loose temperature. `cost`
 determines a function we want to minimize. `modifier` determines which
 small modifications are made to the system during the step.
@@ -11,10 +11,12 @@ function as a new `Furnace` object. Do not discard it.
 
 See also: [`euclid_mean`](@ref), [`euclid_directional`](@ref),
 [`euclid_mean_weighted`](@ref), [`euclid_directional_weighted`](@ref),
-[`RandomSwapper`](@ref), [`RandomFlipper`](@ref).
+[`RandomSwapper`](@ref), [`RandomFlipper`](@ref),
+[`InterfaceSwapper`](@ref), [`InterfaceFlipper`](@ref),
+[`exponential_cooldown`](@ref).
 """
 function annealing_step(furnace  :: Furnace;
-                        cooldown :: Float64          = 0.99999,
+                        cooldown :: Function         = exponential_cooldown(),
                         cost     :: Function         = euclid_mean,
                         modifier :: AbstractModifier = RandomFlipper(furnace.system))
     # Some statistics
@@ -42,9 +44,12 @@ function annealing_step(furnace  :: Furnace;
         accepted = !rejected
     end
 
+    # Calculate a new temperature
+    newtemperature = rejected ? furnace.temperature : cooldown(furnace.temperature, c2)
+
     # Construct a new furnace
     return Furnace(furnace.system, furnace.target,
-                   furnace.temperature * cooldown,
+                   newtemperature,
                    furnace.steps + 1,
                    furnace.rejected + rejected,
                    furnace.accepted + accepted)

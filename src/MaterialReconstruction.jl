@@ -8,6 +8,7 @@ include("modifiers.jl")
 include("initialization.jl")
 include("furnace.jl")
 include("cost.jl")
+include("cooldown.jl")
 include("annealing.jl")
 
 export
@@ -23,6 +24,8 @@ export
     AbstractModifier,
     RandomSwapper, RandomFlipper,
     InterfaceSwapper, InterfaceFlipper,
+    # Cooldown schedules
+    exponential_cooldown,
     # Annealing
     Furnace, annealing_step
 
