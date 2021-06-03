@@ -1,28 +1,55 @@
 metric(x :: AbstractArray, y :: AbstractArray) =
     mapreduce((x, y) -> (x - y)^2, +, x, y)
 
-# All cost functions accept three arguments: the first two of type
-# CorrelationData and the last of type TrackedData (which holds the
-# information about what is measured in the first two args and can be
-# ignored).
+function sumcosts(tracker1 :: CorrelationTracker,
+                  tracker2 :: CorrelationTracker,
+                  costfn   :: Function,
+                           :: Nothing)
+    @assert tracked_data(tracker1) == tracked_data(tracker2)
+    return mapreduce(data -> costfn(tracker1 |> data,
+                                    tracker2 |> data),
+                     +, tracked_data(tracker1))
+end
+
+function sumcosts(tracker1 :: CorrelationTracker,
+                  tracker2 :: CorrelationTracker,
+                  costfn   :: Function,
+                  weights  :: Dict{TrackedData{N}, Float64}) where N
+    @assert tracked_data(tracker1) == tracked_data(tracker2)
+    return mapreduce(data -> costfn(tracker1 |> data,
+                                    tracker2 |> data) / weights[data],
+                     +, tracked_data(tracker1))
+end
+
+# All cost functions accept two systems as their arguments: and return
+# a distance between those systems. We will then try to minimize that
+# distance.
 
 """
+    euclid_mean(data1 :: CorrelationData, data2 :: CorrelationData)
+    euclid_mean(data1 :: CorrelationTracker, data2 :: CorrelationTracker)
+
 Calculate euclidean distance between values of two correlation
-functions. The values are averaged along all directions before
-calculation.
+functions (represented as `CorrelationData` object) or two systems
+(represented as `CorrelationTracker` object). The values are averaged
+along all directions before calculation.
 """
 function euclid_mean end
 
 euclid_mean(data1 :: CorrelationData, data2 :: CorrelationData) =
     metric(data1 |> mean, data2 |> mean)
 
-euclid_mean(data1 :: CorrelationData, data2 :: CorrelationData, :: TrackedData) =
-    euclid_mean(data1, data2)
+euclid_mean(data1 :: CorrelationTracker, data2 :: CorrelationTracker) =
+    sumcosts(data1, data2, euclid_mean, nothing)
 
 """
+    euclid_directional(data1 :: CorrelationData, data2 :: CorrelationData)
+    euclid_directional(data1 :: CorrelationTracker, data2 :: CorrelationTracker)
+
 Calculate euclidean distance between values of two correlation
-functions. The values calculated along different directions are not
-averaged and treated separately.
+functions (represented as `CorrelationData` object) or two systems
+(represented as `CorrelationTracker` object). The values calculated
+along different directions are not averaged and treated separately.
 """
 function euclid_directional end
 
@@ -32,47 +59,51 @@ function euclid_directional(data1 :: CorrelationData,
     sum(metric(data1[dir], data2[dir]) for dir in directions(data1))
 end
 
-euclid_directional(data1 :: CorrelationData, data2 :: CorrelationData, :: TrackedData) =
-    euclid_directional(data1, data2)
-
-"""
-    euclid_mean_weighted(furnace :: Furnace)
-
-Create a function which calculates euclidean distance between values
-of two correlation functions. The values are averaged along all
-directions before calculation.
-
-Each correlation function has its own weight as described in
-Kirill M. Gerke and Marina V. Karsanina 2015 EPL 111 56002
-"""
-function euclid_mean_weighted(furnace :: Furnace)
-    @assert tracked_data(furnace.system) == tracked_data(furnace.target)
-    # At first, calculate weights for all correlation functions
-    weights = Dict(data => euclid_mean(furnace.system |> data,
-                                       furnace.target |> data)
-                   for data in tracked_data(furnace.target))
-    return (data1    :: CorrelationData,
-            data2    :: CorrelationData,
-            datatype :: TrackedData) -> euclid_mean(data1, data2) / weights[datatype]
+function euclid_directional(data1 :: CorrelationTracker,
+                            data2 :: CorrelationTracker)
+    sumcosts(data1, data2, euclid_directional, nothing)
 end
 
 """
-    euclid_directional_weighted(furnace :: Furnace)
+    euclid_mean_weighted(data1 :: CorrelationTracker, data2 :: CorrelationTracker)
 
-Create a function whcih calculates euclidean distance between values
-of two correlation functions. The values calculated along different
-directions are not averaged and treated separately.
+Calculate euclidean distance between values of two correlation
+functions (represented as `CorrelationData` object) or two systems
+(represented as `CorrelationTracker` object). The values are averaged
+along all directions before calculation.
 
 Each correlation function has its own weight as described in
 Kirill M. Gerke and Marina V. Karsanina 2015 EPL 111 56002
 """
-function euclid_directional_weighted(furnace :: Furnace)
-    @assert tracked_data(furnace.system) == tracked_data(furnace.target)
+function euclid_mean_weighted(data1 :: CorrelationTracker,
+                              data2 :: CorrelationTracker)
+    @assert tracked_data(data1) == tracked_data(data2)
     # At first, calculate weights for all correlation functions
-    weights = Dict(data => euclid_directional(furnace.system |> data,
-                                              furnace.target |> data)
-                   for data in tracked_data(furnace.target))
-    return (data1    :: CorrelationData,
-            data2    :: CorrelationData,
-            datatype :: TrackedData) -> euclid_directional(data1, data2) / weights[datatype]
+    weights = Dict(data => euclid_mean(data1 |> data,
+                                       data2 |> data)
+                   for data in tracked_data(data1))
+    f(:: Any, :: Any) = sumcosts(data1, data2, euclid_mean, weights)
+    return f
+end
+
+"""
+    euclid_directional_weighted(data1 :: CorrelationTracker, data2 :: CorrelationTracker)
+
+Calculate euclidean distance between values of two correlation
+functions (represented as `CorrelationData` object) or two systems
+(represented as `CorrelationTracker` object). The values calculated
+along different directions are not averaged and treated separately.
+
+Each correlation function has its own weight as described in
+Kirill M. Gerke and Marina V. Karsanina 2015 EPL 111 56002
+"""
+function euclid_directional_weighted(data1 :: CorrelationTracker,
+                                     data2 :: CorrelationTracker)
+    @assert tracked_data(data1) == tracked_data(data2)
+    # At first, calculate weights for all correlation functions
+    weights = Dict(data => euclid_directional(data1 |> data,
+                                              data2 |> data)
+                   for data in tracked_data(data1))
+    f(:: Any, :: Any) = sumcosts(data1, data2, euclid_directional, weights)
+    return f
 end
