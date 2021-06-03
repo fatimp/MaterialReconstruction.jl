@@ -1,7 +1,7 @@
 module MaterialReconstruction
 using CorrelationFunctions.Directional
 using CorrelationTrackers
-using StatsBase: mean
+using Statistics: mean, std
 using Base.Iterators
 
 include("modifiers.jl")
@@ -26,6 +26,7 @@ export
     InterfaceSwapper, InterfaceFlipper,
     # Cooldown schedules
     exponential_cooldown,
+    aarts_korst_cooldown,
     # Annealing
     Furnace, annealing_step
 
