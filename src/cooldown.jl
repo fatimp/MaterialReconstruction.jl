@@ -12,13 +12,13 @@ is calculated as $T_{n + 1} = \lambda T_{n}$.
 exponential_cooldown(λ :: Float64 = 0.999999) = (T :: Float64, :: Float64) -> λ * T
 
 """
-    aarts_korst_cooldown(steps = 15, λ = 0.01)
+    aarts_korst_cooldown(;steps = 15, λ = 0.01)
 
 Make the Aarts-Korst cooldown schedule. The temperature is changed
 each `steps` steps of annealing algorithm based on standard deviation
 of cost function and a parameter `λ`.
 """
-function aarts_korst_cooldown(steps :: Integer = 15, λ :: Float64 = 0.01)
+function aarts_korst_cooldown(;steps :: Integer = 15, λ :: Float64 = 0.01)
     costs = Vector{Float64}(undef, steps)
     counter = 1
 
@@ -39,14 +39,14 @@ function aarts_korst_cooldown(steps :: Integer = 15, λ :: Float64 = 0.01)
 end
 
 """
-    frost_heinemann_cooldown(minimal_steps = 250, λ = 0.01)
+    frost_heinemann_cooldown(;minimal_steps = 250, λ = 0.01)
 
 Make the Frost-Heinemann cooldown schedule. The temperature is changed
 each `steps` steps of annealing algorithm or until some "target"
 energy is reached which is based on standard deviation of cost
 function and a parameter `λ`.
 """
-function frost_heineman_cooldown(minimal_steps :: Integer = 250, λ :: Float64 = 0.01)
+function frost_heineman_cooldown(;minimal_steps :: Integer = 250, λ :: Float64 = 0.01)
     costs = Vector{Float64}(undef, 0)
     sizehint!(costs, minimal_steps)
     target_prev = 0.0
