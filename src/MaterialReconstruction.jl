@@ -27,6 +27,7 @@ export
     # Cooldown schedules
     exponential_cooldown,
     aarts_korst_cooldown,
+    frost_heineman_cooldown,
     # Annealing
     Furnace, annealing_step
 
