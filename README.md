@@ -1,4 +1,5 @@
 # MaterialReconstruction.jl
+[![CI](https://github.com/shamazmazum/MaterialReconstruction.jl/actions/workflows/test.yml/badge.svg)](https://github.com/shamazmazum/MaterialReconstruction.jl/actions/workflows/test.yml)
 
 This package can be used to reconstruct materials from measured correlation
 functions (as described in Salvatore Torquato's book "Random Heterogeneous
