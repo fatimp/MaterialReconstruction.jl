@@ -4,6 +4,7 @@ using CorrelationTrackers
 using Statistics: mean, std
 using Base.Iterators
 
+include("utilities.jl")
 include("modifiers.jl")
 include("initialization.jl")
 include("furnace.jl")

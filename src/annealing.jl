@@ -18,7 +18,7 @@ See also: [`euclid_mean`](@ref), [`euclid_directional`](@ref),
 function annealing_step(furnace  :: Furnace;
                         cooldown :: Function         = exponential_cooldown(),
                         cost     :: Function         = euclid_mean,
-                        modifier :: AbstractModifier = RandomFlipper(furnace.system))
+                        modifier :: AbstractModifier = InterfaceFlipper())
     # Some statistics
     rejected = false
     accepted = false
@@ -27,7 +27,7 @@ function annealing_step(furnace  :: Furnace;
     c1 = cost(furnace.system, furnace.target)
 
     # Do a small modification to our system
-    rollback = modify!(modifier)
+    rollback = modify!(furnace.system, modifier)
 
     # Compute the new value for the cost function
     c2 = cost(furnace.system, furnace.target)
@@ -36,7 +36,7 @@ function annealing_step(furnace  :: Furnace;
     if c2 > c1
         threshold = exp(-(c2 - c1) / furnace.temperature)
         if rand(Float64) > threshold
-            rollback!(modifier, rollback)
+            rollback!(furnace.system, modifier, rollback)
             @assert c1 ≈ cost(furnace.system, furnace.target)
             rejected = true
         end

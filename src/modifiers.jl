@@ -1,37 +1,56 @@
+# Modifier types
+
 """
 `AbstractModifier` type is responsible for how configuration update
 steps are performed during an annealing process.
 """
 abstract type AbstractModifier end
 
-# ? FIXME: Maybe invent some trait here, like ModifierType?
-function rollback!(modifier :: AbstractModifier,
-                   state    :: Tuple{CartesianIndex, CartesianIndex})
-    tracker = modifier.tracker
-    index1, index2 = state
-    tracker[index1], tracker[index2] = tracker[index2], tracker[index1]
-end
-
-function rollback!(modifier :: AbstractModifier,
-                   state    :: CartesianIndex)
-    tracker = modifier.tracker
-    tracker[state] = 1 - tracker[state]
-end
-
 """
-    RandomSwapper(tracker :: CorrelationTracker)
+    RandomSwapper()
 
 Create `RandomSwapper` modifier which will swap two random voxels of
 different phases during an annealing step.
 
 See also: [`RandomFlipper`](@ref), [`AbstractModifier`](@ref).
 """
-struct RandomSwapper <: AbstractModifier
-    tracker :: CorrelationTracker
-end
+struct RandomSwapper <: AbstractModifier end
 
-function modify!(modifier :: RandomSwapper)
-    tracker = modifier.tracker
+"""
+    RandomFlipper()
+
+Create `RandomFlipper` modifier which will flip phase of a random
+voxel in a two-phase system during an annealing step.
+
+See also: [`RandomSwapper`](@ref), [`AbstractModifier`](@ref).
+"""
+struct RandomFlipper <: AbstractModifier end
+
+"""
+    InterfaceSwapper()
+
+Create `InterfaceSwapper` modifier which will swap voxels of different
+phases which lie at random points of the interface.
+
+See also: [`RandomSwapper`](@ref), [`RandomFlipper`](@ref),
+[`InterfaceFlipper`](@ref), [`AbstractModifier`](@ref).
+"""
+struct InterfaceSwapper <: AbstractModifier end
+
+"""
+    InterfaceFlipper()
+
+Create `InterfaceFlipper` modifier which will flip phase of a random
+voxel on an interface of a two-phase system during an annealing step.
+
+See also: [`RandomSwapper`](@ref), [`RandomFlipper`](@ref),
+[`InterfaceSwapper`](@ref), [`AbstractModifier`](@ref).
+"""
+struct InterfaceFlipper <: AbstractModifier end
+
+# Methods
+
+function modify!(tracker :: CorrelationTracker, :: RandomSwapper)
     shape = size(tracker)
     index1 = random_index(shape)
 
@@ -45,20 +64,7 @@ function modify!(modifier :: RandomSwapper)
     end
 end
 
-"""
-    RandomFlipper(tracker :: CorrelationTracker)
-
-Create `RandomFlipper` modifier which will flip phase of a random
-voxel in a two-phase system during an annealing step.
-
-See also: [`RandomSwapper`](@ref), [`AbstractModifier`](@ref).
-"""
-struct RandomFlipper <: AbstractModifier
-    tracker :: CorrelationTracker
-end
-
-function modify!(modifier :: RandomFlipper)
-    tracker = modifier.tracker
+function modify!(tracker :: CorrelationTracker, :: RandomFlipper)
     shape = size(tracker)
     index = random_index(shape)
 
@@ -66,56 +72,7 @@ function modify!(modifier :: RandomFlipper)
     return index
 end
 
-# Line "drawing iterator"
-struct LineIterator{N}
-    start :: NTuple{N, Int}
-    ϕ     :: Float64
-    θ     :: Float64
-end
-
-RandomLineIterator(start) =
-    LineIterator(start, 2π*rand(Float64), π*rand(Float64) - π/2)
-
-Base.IteratorSize(::LineIterator) = Base.IsInfinite()
-Base.iterate(iter :: LineIterator) = CartesianIndex(iter.start), 0.1
-
-function Base.iterate(iter :: LineIterator{2}, r :: Float64)
-    r    = r + sqrt(2)
-    x, y = iter.start
-    ϕ    = iter.ϕ
-
-    xn = x + r*cos(ϕ) |> floor |> Int
-    yn = y + r*sin(ϕ) |> floor |> Int
-    return CartesianIndex(xn, yn), r
-end
-
-function Base.iterate(iter :: LineIterator{3}, r :: Float64)
-    r       = r + sqrt(3)
-    x, y, z = iter.start
-    ϕ       = iter.ϕ
-    θ       = iter.θ
-
-    xn = x + r*cos(θ)*cos(ϕ) |> floor |> Int
-    yn = y + r*cos(θ)*sin(ϕ) |> floor |> Int
-    zn = z + r*sin(θ)        |> floor |> Int
-    return CartesianIndex(xn, yn, zn), r
-end
-
-"""
-    InterfaceSwapper(tracker :: CorrelationTracker)
-
-Create `InterfaceSwapper` modifier which will swap voxels of different
-phases which lie at random points of the interface.
-
-See also: [`RandomSwapper`](@ref), [`RandomFlipper`](@ref),
-[`InterfaceFlipper`](@ref), [`AbstractModifier`](@ref).
-"""
-struct InterfaceSwapper <: AbstractModifier
-    tracker :: CorrelationTracker
-end
-
-function modify!(modifier :: InterfaceSwapper)
-    tracker = modifier.tracker
+function modify!(tracker :: CorrelationTracker, :: InterfaceSwapper)
     shape = size(tracker)
 
     while true
@@ -139,21 +96,7 @@ function modify!(modifier :: InterfaceSwapper)
     end
 end
 
-"""
-    InterfaceFlipper(tracker :: CorrelationTracker)
-
-Create `InterfaceFlipper` modifier which will flip phase of a random
-voxel on an interface of a two-phase system during an annealing step.
-
-See also: [`RandomSwapper`](@ref), [`RandomFlipper`](@ref),
-[`InterfaceSwapper`](@ref), [`AbstractModifier`](@ref).
-"""
-struct InterfaceFlipper <: AbstractModifier
-    tracker :: CorrelationTracker
-end
-
-function modify!(modifier :: InterfaceFlipper)
-    tracker = modifier.tracker
+function modify!(tracker :: CorrelationTracker, :: InterfaceFlipper)
     shape = size(tracker)
 
     while true
@@ -170,4 +113,18 @@ function modify!(modifier :: InterfaceFlipper)
             return index
         end
     end
+end
+
+# ? FIXME: Maybe invent some trait here, like ModifierType?
+function rollback!(tracker :: CorrelationTracker,
+                           :: AbstractModifier,
+                   state   :: Tuple{CartesianIndex, CartesianIndex})
+    index1, index2 = state
+    tracker[index1], tracker[index2] = tracker[index2], tracker[index1]
+end
+
+function rollback!(tracker :: CorrelationTracker,
+                           :: AbstractModifier,
+                   state   :: CartesianIndex)
+    tracker[state] = 1 - tracker[state]
 end
