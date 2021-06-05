@@ -1,8 +1,10 @@
 module MaterialReconstruction
 using CorrelationFunctions.Directional
 using CorrelationTrackers
-using Statistics: mean, std
 using Base.Iterators
+using Statistics: mean, std
+using LsqFit: curve_fit, coef
+using PoissonRandom: pois_rand
 
 include("utilities.jl")
 include("modifiers.jl")
@@ -21,6 +23,7 @@ export
     čapek_cost,
     # Initialization
     initialize_random,
+    initialize_spheres,
     # Modifier structures
     AbstractModifier,
     RandomSwapper, RandomFlipper,
