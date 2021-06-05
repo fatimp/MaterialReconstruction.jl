@@ -109,7 +109,7 @@ function euclid_directional_weighted(data1 :: CorrelationTracker,
 end
 
 """
-    čapek_cost(data1 :: CorrelationTracker, data2 :: CorrelationTracker, η :: Float64)
+    čapek_cost(data1 :: CorrelationTracker, data2 :: CorrelationTracker, η = 0.6)
 
 Returns a function which calculates the cost as based on S₂ and L₂ for
 solid and void phases where contribution on L₂ for void phase
@@ -117,7 +117,7 @@ increases with time.
 """
 function čapek_cost(data1 :: CorrelationTracker,
                     data2 :: CorrelationTracker,
-                    η     :: Float64)
+                    η     :: Float64 = 0.6)
     # Initial S2
     s2cost_init  = euclid_directional(Directional.s2(data1, 0),
                                       Directional.s2(data2, 0))

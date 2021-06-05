@@ -1,12 +1,11 @@
 function test_annealing(target, init, cost, modifier, cooldown)
     system = init(target, (1000, 1000))
-    furnace = Furnace(system, target; T0 = 7e-5)
-    c = cost(system, target)
+    furnace = Furnace(system, target; T0 = 2e-4)
     c0 = euclid_directional(system, target)
 
     for i in 1:5000
         furnace = annealing_step(furnace;
-                                 cost     = c,
+                                 cost     = cost,
                                  modifier = modifier,
                                  cooldown = cooldown)
     end
@@ -16,9 +15,28 @@ function test_annealing(target, init, cost, modifier, cooldown)
     @test c1 < c0
 end
 
-@testset "Value noise original" begin
-    array = Int8.([value_noise(x/50, y/100, 0.0, 4, 43565) for x in 1:1000, y in 1:1000] .< 0.5)
-    target = CorrelationTracker{Int8, 2}(array; directions = [:x, :y, :xy_main, :xy_anti])
+@testset "300x300 image" begin
+    array = read_cuboid("image3d.json")[:,:,1]
+    target = CorrelationTracker{Int8, 2}(array;
+                                         directions = [:x, :y, :xy_main, :xy_anti],
+                                         periodic   = true)
 
-    test_annealing(target, initialize_spheres, čapek_cost, InterfaceFlipper(), aarts_korst_cooldown())
+    # Need to find starting costs for this
+    #modifiers = (InterfaceFlipper(), InterfaceSwapper(),
+    #             RandomSwapper(),    RandomFlipper())
+    #costs = (euclid_mean, euclid_directional)
+    #initializers = (initialize_random, initialize_spheres)
+    #cooldowns = (exponential_cooldown(), aarts_korst_cooldown(), frost_heineman_cooldown())
+
+    #alltogether = product(modifiers, costs, initializers, cooldowns)
+
+    alltogether = product((InterfaceFlipper(), InterfaceSwapper()),
+                          (euclid_directional, euclid_mean),
+                          (initialize_spheres,),
+                          (aarts_korst_cooldown(),))
+
+    foreach(alltogether) do prod
+        modifier, cost, initializer, cooldown = prod
+        test_annealing(target, initializer, cost, modifier, cooldown)
+    end
 end
