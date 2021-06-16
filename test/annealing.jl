@@ -17,9 +17,9 @@ end
 
 @testset "300x300 image" begin
     array = read_cuboid("image3d.json")[:,:,1]
-    target = CorrelationTracker{Int8, 2}(array;
-                                         directions = [:x, :y, :xy, :yx],
-                                         periodic   = true)
+    target = CorrelationTracker(array;
+                                directions = [:x, :y, :xy, :yx],
+                                periodic   = true)
 
     # Need to find starting costs for this
     #modifiers = (InterfaceFlipper(), InterfaceSwapper(),
