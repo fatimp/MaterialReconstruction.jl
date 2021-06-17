@@ -51,12 +51,12 @@ struct InterfaceFlipper <: AbstractModifier end
 # Methods
 
 function modify!(tracker :: CorrelationTracker, :: RandomSwapper)
-    shape = size(tracker)
-    index1 = random_index(shape)
+    indices = CartesianIndices(tracker)
+    index1 = rand(indices)
 
     while true
         # Try to find element with a different phase
-        index2 = random_index(shape)
+        index2 = rand(indices)
         if tracker[index1] != tracker[index2]
             tracker[index1], tracker[index2] = tracker[index2], tracker[index1]
             return index1, index2
@@ -65,31 +65,30 @@ function modify!(tracker :: CorrelationTracker, :: RandomSwapper)
 end
 
 function modify!(tracker :: CorrelationTracker, :: RandomFlipper)
-    shape = size(tracker)
-    index = random_index(shape)
+    indices = CartesianIndices(tracker)
+    index = rand(indices)
 
     tracker[index] = 1 - tracker[index]
     return index
 end
 
 function modify!(tracker :: CorrelationTracker, :: InterfaceSwapper)
-    shape = size(tracker)
+    indices = CartesianIndices(tracker)
 
     while true
-        rndidx = Tuple(rand(1:x) for x in shape)
+        rndidx = rand(indices)
         ray1 = RandomLineIterator(rndidx)
         ray2 = RandomLineIterator(rndidx)
         ray2 = zip(ray2, drop(ray2, 1))
 
-        start_phase = tracker[rndidx...]
+        start_phase = tracker[rndidx]
 
         cont(x :: CartesianIndex) =
-            checkbounds(Bool, tracker, Tuple(x)...) && tracker[x] == start_phase
+            checkbounds(Bool, tracker, x) && tracker[x] == start_phase
         idx1 = dropwhile(cont, ray1) |> first
         idx2 = dropwhile(x -> cont(x[2]), ray2) |> first |> first
 
-        if checkbounds(Bool, tracker, Tuple(idx1)...) &&
-           checkbounds(Bool, tracker, Tuple(idx2)...)
+        if checkbounds(Bool, tracker, idx1) && checkbounds(Bool, tracker, idx2)
             tracker[idx1], tracker[idx2] = tracker[idx2], tracker[idx1]
             return idx1, idx2
         end
@@ -97,18 +96,18 @@ function modify!(tracker :: CorrelationTracker, :: InterfaceSwapper)
 end
 
 function modify!(tracker :: CorrelationTracker, :: InterfaceFlipper)
-    shape = size(tracker)
+    indices = CartesianIndices(tracker)
 
     while true
-        rndidx = Tuple(rand(1:x) for x in shape)
+        rndidx = rand(indices)
         ray = RandomLineIterator(rndidx)
-        start_phase = tracker[rndidx...]
+        start_phase = tracker[rndidx]
 
         cont(x :: CartesianIndex) =
-            checkbounds(Bool, tracker, Tuple(x)...) && tracker[x] == start_phase
+            checkbounds(Bool, tracker, x) && tracker[x] == start_phase
         index = dropwhile(cont, ray) |> first
 
-        if checkbounds(Bool, tracker, Tuple(index)...)
+        if checkbounds(Bool, tracker, index)
             tracker[index] = 1 - tracker[index]
             return index
         end

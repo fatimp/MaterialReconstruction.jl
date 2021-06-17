@@ -1,6 +1,6 @@
 # Line "drawing" iterator
 struct LineIterator{N}
-    start :: NTuple{N, Int}
+    start :: CartesianIndex{N}
     ϕ     :: Float64
     θ     :: Float64
 end
@@ -9,11 +9,11 @@ RandomLineIterator(start) =
     LineIterator(start, 2π*rand(Float64), π*rand(Float64) - π/2)
 
 Base.IteratorSize(::LineIterator) = Base.IsInfinite()
-Base.iterate(iter :: LineIterator) = CartesianIndex(iter.start), 0.1
+Base.iterate(iter :: LineIterator) = iter.start, 0.1
 
 function Base.iterate(iter :: LineIterator{2}, r :: Float64)
     r    = r + sqrt(2)
-    x, y = iter.start
+    x, y = iter.start[1], iter.start[2]
     ϕ    = iter.ϕ
 
     xn = x + r*cos(ϕ) |> floor |> Int
@@ -23,7 +23,7 @@ end
 
 function Base.iterate(iter :: LineIterator{3}, r :: Float64)
     r       = r + sqrt(3)
-    x, y, z = iter.start
+    x, y, z = iter.start[1], iter.start[2], iter.start[3]
     ϕ       = iter.ϕ
     θ       = iter.θ
 
@@ -62,16 +62,16 @@ function spheres_parameters(target :: CorrelationTracker{T, N},
 end
 
 function draw_sphere!(array  :: AbstractArray{T, N},
-                      center :: NTuple{N, Int},
+                      center :: CartesianIndex{N},
                       R      :: Float64) where {T, N}
     R = R |> floor |> Int
 
-    iter = product((-R:R for i in 1:N)...)
-    foreach(iter) do point
-        dist = mapreduce(x -> x^2, +, point)
-        coord = point .+ center
-        if dist < R^2 && checkbounds(Bool, array, coord...)
-            @inbounds array[coord...] = 1
+    sphere_indices = CartesianIndices(Tuple(-R:R for i in 1:N))
+    foreach(sphere_indices) do point
+        dist = mapreduce(x -> x^2, +, Tuple(point))
+        coord = point + center
+        if dist < R^2 && checkbounds(Bool, array, coord)
+            @inbounds array[coord] = 1
         end
     end
 end
@@ -82,10 +82,10 @@ function generate_spheres(shape :: NTuple{N, Int},
                           λ     :: Float64) where N
     nspheres = pois_rand(λ * prod(shape))
     spheres  = zeros(T, shape)
-    center() = NTuple{N, Int}(rand(1:s) for s in shape)
+    indices  = CartesianIndices(spheres)
 
     for n in 1:nspheres
-        draw_sphere!(spheres, center(), R)
+        draw_sphere!(spheres, rand(indices), R)
     end
 
     return spheres

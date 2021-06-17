@@ -1,5 +1,3 @@
-random_index(shape) = CartesianIndex((rand(1:s) for s in shape)...)
-
 function initialize_tracker(array  :: AbstractArray{T, N},
                             target :: CorrelationTracker{T, N}) where {T, N}
     # Create CorrelationTracker for the system being annealed
@@ -28,13 +26,16 @@ function initialize_random(target :: CorrelationTracker{T, N},
     # belonging to the phase "zero".
     array = zeros(T, shape)
 
+    # All indices in array
+    indices = CartesianIndices(array)
+
     # Determine the number of elements with phase "one" to keep the
     # porosity of the original
     n = porosity * prod(shape)
 
     # Populate the array
     while n > 0
-        idx = random_index(shape)
+        idx = rand(indices)
         # If we have a free place, put phase "one" to it
         if array[idx] == 0
             array[idx] = 1
