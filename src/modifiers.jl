@@ -48,6 +48,26 @@ See also: [`RandomSwapper`](@ref), [`RandomFlipper`](@ref),
 """
 struct InterfaceFlipper <: AbstractModifier end
 
+"""
+    C2UpdateProxy(modifier, boxsize = 5)
+
+Create proxy modifier which behaves like `modifier` but also estimates
+a number of full c2 updates as a function of number of annealing
+steps. Bigger values of `boxsize` result in more accurate estimation
+but work slower.
+"""
+struct C2UpdateProxy{T} <: AbstractModifier
+    modifier :: T
+    updates  :: Vector{Int}
+    boxsize  :: Int
+end
+
+function C2UpdateProxy(modifier :: T, boxsize :: Int = 5) where T <: AbstractModifier
+    updates = zeros(Int, 1)
+    sizehint!(updates, 1000000)
+    return C2UpdateProxy{T}(modifier, updates, boxsize)
+end
+
 # Methods
 
 function modify!(tracker :: CorrelationTracker, :: RandomSwapper)
@@ -112,6 +132,28 @@ function modify!(tracker :: CorrelationTracker, :: InterfaceFlipper)
             return index
         end
     end
+end
+
+function c2_counter_increment(tracker :: CorrelationTracker,
+                              idx     :: CartesianIndex,
+                              boxsize :: Int)
+    box = CartesianIndices(Tuple((x - boxsize):(x + boxsize) for x in Tuple(idx)))
+    cut = CircularArray(tracker)[box] |> Array
+    segments1 = label_components(cut)
+    idx = boxsize + 1
+    cut[idx, idx] = 1 - cut[idx, idx]
+    segments2 = label_components(cut)
+    nonequal = sum(segments1 .!= segments2)
+    return (nonequal == 1) ? 0 : 1
+end
+
+function modify!(tracker :: CorrelationTracker, modifier :: C2UpdateProxy)
+    boxsize = modifier.boxsize
+    updates = modifier.updates
+
+    idx :: CartesianIndex = modify!(tracker, modifier.modifier)
+    push!(updates, updates[end] + c2_counter_increment(tracker, idx, boxsize))
+    return idx
 end
 
 # ? FIXME: Maybe invent some trait here, like ModifierType?

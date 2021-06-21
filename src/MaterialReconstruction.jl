@@ -5,6 +5,8 @@ using Base.Iterators
 using Statistics: mean, std
 using LsqFit: curve_fit, coef
 using PoissonRandom: pois_rand
+using CircularArrays: CircularArray
+using ImageSegmentation: label_components
 
 include("utilities.jl")
 include("modifiers.jl")
@@ -28,6 +30,7 @@ export
     AbstractModifier,
     RandomSwapper, RandomFlipper,
     InterfaceSwapper, InterfaceFlipper,
+    C2UpdateProxy,
     modify!, rollback!,
     # Cooldown schedules
     exponential_cooldown,
