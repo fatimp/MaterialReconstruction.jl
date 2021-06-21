@@ -1,36 +1,22 @@
 # Line "drawing" iterator
 struct LineIterator{N}
     start :: CartesianIndex{N}
-    ϕ     :: Float64
-    θ     :: Float64
+    delta :: CartesianIndex{N}
 end
 
-RandomLineIterator(start) =
-    LineIterator(start, 2π*rand(Float64), π*rand(Float64) - π/2)
+function RandomLineIterator(start :: CartesianIndex{N}) where N
+    coord = rand(1:N)
+    delta = zeros(Int, N)
+    delta[coord] = rand((1, -1))
+    return LineIterator(start, delta |> Tuple |> CartesianIndex)
+end
 
 Base.IteratorSize(::LineIterator) = Base.IsInfinite()
-Base.iterate(iter :: LineIterator) = iter.start, 0.1
+Base.iterate(iter :: LineIterator) = iter.start, 1
 
-function Base.iterate(iter :: LineIterator{2}, r :: Float64)
-    r    = r + sqrt(2)
-    x, y = iter.start[1], iter.start[2]
-    ϕ    = iter.ϕ
-
-    xn = x + r*cos(ϕ) |> floor |> Int
-    yn = y + r*sin(ϕ) |> floor |> Int
-    return CartesianIndex(xn, yn), r
-end
-
-function Base.iterate(iter :: LineIterator{3}, r :: Float64)
-    r       = r + sqrt(3)
-    x, y, z = iter.start[1], iter.start[2], iter.start[3]
-    ϕ       = iter.ϕ
-    θ       = iter.θ
-
-    xn = x + r*cos(θ)*cos(ϕ) |> floor |> Int
-    yn = y + r*cos(θ)*sin(ϕ) |> floor |> Int
-    zn = z + r*sin(θ)        |> floor |> Int
-    return CartesianIndex(xn, yn, zn), r
+function Base.iterate(iter :: LineIterator, dist :: Int)
+    position = iter.start + dist*iter.delta
+    return position, dist + 1
 end
 
 # Theoretical two-point functions for the void phase for overlapping
