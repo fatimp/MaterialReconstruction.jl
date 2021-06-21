@@ -60,12 +60,15 @@ struct C2UpdateProxy{T} <: AbstractModifier
     modifier :: T
     updates  :: Vector{Int}
     boxsize  :: Int
+    soft     :: Bool
 end
 
-function C2UpdateProxy(modifier :: T, boxsize :: Int = 5) where T <: AbstractModifier
+function C2UpdateProxy(modifier :: T;
+                       boxsize  :: Int  = 5,
+                       soft     :: Bool = false) where T <: AbstractModifier
     updates = zeros(Int, 1)
     sizehint!(updates, 1000000)
-    return C2UpdateProxy{T}(modifier, updates, boxsize)
+    return C2UpdateProxy{T}(modifier, updates, boxsize, soft)
 end
 
 # Methods
@@ -135,24 +138,43 @@ function modify!(tracker :: CorrelationTracker, :: InterfaceFlipper)
 end
 
 function c2_counter_increment(tracker :: CorrelationTracker,
-                              idx     :: CartesianIndex,
-                              boxsize :: Int)
+                              idx     :: CartesianIndex{N},
+                              boxsize :: Int,
+                              soft    :: Bool) where N
+    # Take a box with a size of 2boxsize+1 and idx in center
     box = CartesianIndices(Tuple((x - boxsize):(x + boxsize) for x in Tuple(idx)))
-    cut = CircularArray(tracker)[box] |> Array
-    segments1 = label_components(cut)
-    idx = boxsize + 1
-    cut[idx, idx] = 1 - cut[idx, idx]
-    segments2 = label_components(cut)
-    nonequal = sum(segments1 .!= segments2)
-    return (nonequal == 1) ? 0 : 1
+    slice = CircularArray(tracker)[box] |> Array
+
+    # Segmentation after update
+    segments1 = label_components(slice)
+
+    # Roll back and get segmentation before update
+    idx = CartesianIndex(Tuple(fill(boxsize + 1, N)))
+    slice[idx] = 1 - slice[idx]
+    segments2 = label_components(slice)
+
+    # Compare segmentation before and after
+    nonequal = segments1 .!= segments2
+
+    if soft
+        # Soft updates: Check if changes in segmentation go beyond the
+        # box.
+        box_inner = CartesianIndices(Tuple(fill(2:2boxsize, N)))
+        nonequal_inner = nonequal[box_inner]
+        return (sum(nonequal) == sum(nonequal_inner)) ? 0 : 1
+    else
+        # Hard updates: Check if segmentation stays the same
+        return (sum(nonequal) == 1) ? 0 : 1
+    end
 end
 
 function modify!(tracker :: CorrelationTracker, modifier :: C2UpdateProxy)
     boxsize = modifier.boxsize
     updates = modifier.updates
+    soft    = modifier.soft
 
     idx :: CartesianIndex = modify!(tracker, modifier.modifier)
-    push!(updates, updates[end] + c2_counter_increment(tracker, idx, boxsize))
+    push!(updates, updates[end] + c2_counter_increment(tracker, idx, boxsize, soft))
     return idx
 end
 
