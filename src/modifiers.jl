@@ -48,9 +48,14 @@ See also: [`RandomSwapper`](@ref), [`RandomFlipper`](@ref),
 """
 struct InterfaceFlipper <: AbstractModifier end
 
+struct ImprovedRandomFlipper <: AbstractModifier
+    histogram :: Vector{Int}
+    α         :: Float64
+end
+
 # Methods
 
-function modify!(tracker :: CorrelationTracker, :: RandomSwapper)
+function modify!(tracker :: AbstractArray, :: RandomSwapper)
     indices = CartesianIndices(tracker)
     index1 = rand(indices)
 
@@ -64,7 +69,7 @@ function modify!(tracker :: CorrelationTracker, :: RandomSwapper)
     end
 end
 
-function modify!(tracker :: CorrelationTracker, :: RandomFlipper)
+function modify!(tracker :: AbstractArray, :: RandomFlipper)
     indices = CartesianIndices(tracker)
     index = rand(indices)
 
@@ -72,7 +77,7 @@ function modify!(tracker :: CorrelationTracker, :: RandomFlipper)
     return index
 end
 
-function modify!(tracker :: CorrelationTracker, :: InterfaceSwapper)
+function modify!(tracker :: AbstractArray, :: InterfaceSwapper)
     indices = CartesianIndices(tracker)
 
     while true
@@ -95,7 +100,7 @@ function modify!(tracker :: CorrelationTracker, :: InterfaceSwapper)
     end
 end
 
-function modify!(tracker :: CorrelationTracker, :: InterfaceFlipper)
+function modify!(tracker :: AbstractArray, :: InterfaceFlipper)
     indices = CartesianIndices(tracker)
 
     while true
@@ -114,16 +119,114 @@ function modify!(tracker :: CorrelationTracker, :: InterfaceFlipper)
     end
 end
 
+# Here and later: DPN = different phase neighbors
+function count_dpn(array :: AbstractArray{T, N},
+                   idx   :: CartesianIndex{N}) where {T, N}
+    indices = CartesianIndices(array)
+    fidx, lidx = first(indices), last(indices)
+    uidx = oneunit(idx)
+    elt = array[idx]
+    return sum(array[idx] != elt for idx in max(idx - uidx, fidx):min(idx + uidx, lidx))
+end
+
+function dpn_histogram(array :: AbstractArray)
+    dims = ndims(array)
+    hist = zeros(Int, 3^dims)
+
+    for idx in CartesianIndices(array)
+        different = count_dpn(array, idx)
+        hist[different+1] += 1
+    end
+
+    return hist
+end
+
+function update_pdf(histogram :: Vector{Int}, α :: Float64)
+    prob = [p*α^n for (p, n) in zip(histogram, countfrom(0))]
+    prob = prob ./ sum(prob)
+    return prob
+end
+
+function neighbors_for_update(histogram :: Vector{Int}, α :: Float64)
+    prob = update_pdf(histogram, α)
+    for idx in 2:length(prob)
+        prob[idx] += prob[idx-1]
+    end
+
+    r = rand(Float64)
+    return findfirst(x -> r < x, prob) - 1
+end
+
+@doc raw"""
+    ImprovedRandomFlipper(tracker, α)
+
+Create `ImprovedRandomFlipper` modifier which will flip phase of a
+random voxel with $n$ different phase neighbors with probability 
+$p \propto \alpha^n N(n)$ where $N(n)$ is a number of pixels having
+$n$ different phase neighbors in the system.
+
+See also: [`RandomSwapper`](@ref), [`RandomFlipper`](@ref),
+[`InterfaceSwapper`](@ref), [`AbstractModifier`](@ref).
+"""
+ImprovedRandomFlipper(tracker :: CorrelationTracker, α :: Float64) =
+    ImprovedRandomFlipper(dpn_histogram(tracker), α)
+
+function flip_and_update_histogram!(tracker  :: AbstractArray{T, N},
+                                    modifier :: ImprovedRandomFlipper,
+                                    index    :: CartesianIndex{N}) where {T, N}
+    histogram = modifier.histogram
+
+    indices = CartesianIndices(tracker)
+    fidx, lidx = first(indices), last(indices)
+    uidx = oneunit(fidx)
+
+    for idx in max(index - uidx, fidx):min(index + uidx, lidx)
+        n_neighbor = count_dpn(tracker, idx)
+        histogram[n_neighbor + 1] -= 1
+    end
+
+    tracker[index] = 1 - tracker[index]
+
+    for idx in max(index - uidx, fidx):min(index + uidx, lidx)
+        n_neighbor = count_dpn(tracker, idx)
+        histogram[n_neighbor + 1] += 1
+    end
+
+    return nothing
+end
+
+function modify!(tracker :: AbstractArray, modifier :: ImprovedRandomFlipper)
+    histogram = modifier.histogram
+    α         = modifier.α
+
+    n = neighbors_for_update(histogram, α)
+    indices = CartesianIndices(tracker)
+
+    while true
+        index = rand(indices)
+        if n == count_dpn(tracker, index)
+            @assert histogram[n+1] > 0
+            flip_and_update_histogram!(tracker, modifier, index)
+            return index
+        end
+    end
+end
+
+rollback!(tracker :: AbstractArray, modifier :: ImprovedRandomFlipper, state :: CartesianIndex) =
+    flip_and_update_histogram!(tracker, modifier, state)
+
 # ? FIXME: Maybe invent some trait here, like ModifierType?
-function rollback!(tracker :: CorrelationTracker,
-                           :: AbstractModifier,
+function rollback!(tracker :: AbstractArray,
+                   _       :: AbstractModifier,
                    state   :: Tuple{CartesianIndex, CartesianIndex})
     index1, index2 = state
     tracker[index1], tracker[index2] = tracker[index2], tracker[index1]
+    return nothing
 end
 
-function rollback!(tracker :: CorrelationTracker,
-                           :: AbstractModifier,
+function rollback!(tracker :: AbstractArray,
+                   _       :: AbstractModifier,
                    state   :: CartesianIndex)
     tracker[state] = 1 - tracker[state]
+    return nothing
 end

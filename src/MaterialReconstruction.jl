@@ -28,6 +28,7 @@ export
     AbstractModifier,
     RandomSwapper, RandomFlipper,
     InterfaceSwapper, InterfaceFlipper,
+    ImprovedRandomFlipper,
     modify!, rollback!,
     # Cooldown schedules
     exponential_cooldown,
