@@ -112,7 +112,7 @@ end
     čapek_cost(data1 :: CorrelationTracker, data2 :: CorrelationTracker, η = 0.6)
 
 Returns a function which calculates the cost as based on S₂ and L₂ for
-solid and void phases where contribution on L₂ for void phase
+solid and void phases where contribution of L₂ for void phase
 increases with time.
 """
 function čapek_cost(data1 :: CorrelationTracker,
@@ -130,7 +130,7 @@ function čapek_cost(data1 :: CorrelationTracker,
     # then in the range [0, 1].
     η = η*(s2cost_init + l2scost_init)
 
-    function f(:: Any, :: Any)
+    function f(data1 :: CorrelationTracker, data2 :: CorrelationTracker)
         # S2
         s2cost  = euclid_directional(Directional.s2(data1, 0),
                                      Directional.s2(data2, 0))
@@ -142,6 +142,56 @@ function čapek_cost(data1 :: CorrelationTracker,
                                      Directional.l2(data2, 0))
 
         return s2cost + l2scost + l2vcost*η/(η + s2cost + l2scost)
+    end
+
+    return f
+end
+
+"""
+    čapek_cost_ss(data1 :: CorrelationTracker, data2 :: CorrelationTracker, η₁ = 0.6, η₂ = 0.6)
+
+Returns a function which calculates the cost as based on S₂, L₂ for
+solid and void phases and Fss (technically, the one for void phase is
+used) where contributions of L₂ for void phase and Fss increase with
+time.
+
+η₁ and η₂ must be in the range [0, 1]. η₁ controls initial
+contribution of L₂ and η₂ controls initial contribution of Fss. The
+smaller these values are the smaller is initial contribution.
+"""
+function čapek_cost_ss(data1 :: CorrelationTracker,
+                       data2 :: CorrelationTracker,
+                       η₁    :: Float64 = 0.6,
+                       η₂    :: Float64 = 0.6)
+    # Initial S2
+    s2cost_init  = euclid_directional(Directional.s2(data1, 0),
+                                      Directional.s2(data2, 0))
+    # Initial L2 for solid phase
+    l2scost_init = euclid_directional(Directional.l2(data1, 1),
+                                      Directional.l2(data2, 1))
+
+    # Rescale η₁ and η₂ as in čapek_cost
+    η₁ = η₁*(s2cost_init + l2scost_init)
+    η₂ = η₂*(s2cost_init + l2scost_init)
+
+    function f(data1 :: CorrelationTracker, data2 :: CorrelationTracker)
+        # S2
+        s2cost  = euclid_directional(Directional.s2(data1, 0),
+                                     Directional.s2(data2, 0))
+        # L2 for solid phase
+        l2scost = euclid_directional(Directional.l2(data1, 1),
+                                     Directional.l2(data2, 1))
+        # L2 for void phase
+        l2vcost = euclid_directional(Directional.l2(data1, 0),
+                                     Directional.l2(data2, 0))
+
+        # Fss for void phase
+        ssvcost = euclid_directional(Directional.surfsurf(data1, 0),
+                                     Directional.surfsurf(data2, 0))
+
+        return s2cost + l2scost +
+            l2vcost*η₁/(η₁ + s2cost + l2scost) +
+            ssvcost*η₂/(η₂ + s2cost + l2scost)
     end
 
     return f
