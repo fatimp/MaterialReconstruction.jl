@@ -14,7 +14,7 @@ end
 function sumcosts(tracker1 :: CorrelationTracker,
                   tracker2 :: CorrelationTracker,
                   costfn   :: Function,
-                  weights  :: Dict{TrackedData{N}, Float64}) where N
+                  weights  :: Dict{AbstractTracker, Float64})
     @assert tracked_data(tracker1) == tracked_data(tracker2)
     return mapreduce(data -> costfn(tracker1 |> data,
                                     tracker2 |> data) / weights[data],
