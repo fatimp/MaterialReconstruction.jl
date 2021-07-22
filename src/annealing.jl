@@ -27,7 +27,7 @@ function annealing_step(furnace  :: Furnace;
     c1 = cost(furnace.system, furnace.target)
 
     # Do a small modification to our system
-    rollback = modify!(furnace.system, modifier)
+    state = modify!(furnace.system, modifier)
 
     # Compute the new value for the cost function
     c2 = cost(furnace.system, furnace.target)
@@ -36,7 +36,7 @@ function annealing_step(furnace  :: Furnace;
     if c2 > c1
         threshold = exp(-(c2 - c1) / furnace.temperature)
         if rand(Float64) > threshold
-            rollback!(furnace.system, modifier, rollback)
+            reject!(furnace.system, modifier, state)
             @assert c1 ≈ cost(furnace.system, furnace.target)
             rejected = true
         end

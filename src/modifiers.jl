@@ -63,8 +63,10 @@ function modify!(tracker :: AbstractArray, :: RandomSwapper)
         # Try to find element with a different phase
         index2 = rand(indices)
         if tracker[index1] != tracker[index2]
-            tracker[index1], tracker[index2] = tracker[index2], tracker[index1]
-            return index1, index2
+            val1, val2 = tracker[index1], tracker[index2]
+            token1 = update_corrfns!(tracker, val2, index1)
+            token2 = update_corrfns!(tracker, val1, index2)
+            return token1, token2
         end
     end
 end
@@ -73,8 +75,7 @@ function modify!(tracker :: AbstractArray, :: RandomFlipper)
     indices = CartesianIndices(tracker)
     index = rand(indices)
 
-    tracker[index] = 1 - tracker[index]
-    return index
+    return update_corrfns!(tracker, 1 - tracker[index], index)
 end
 
 function modify!(tracker :: AbstractArray, :: InterfaceSwapper)
@@ -90,12 +91,15 @@ function modify!(tracker :: AbstractArray, :: InterfaceSwapper)
 
         cont(x :: CartesianIndex) =
             checkbounds(Bool, tracker, x) && tracker[x] == start_phase
-        idx1 = dropwhile(cont, ray1) |> first
-        idx2 = dropwhile(x -> cont(x[2]), ray2) |> first |> first
+        index1 = dropwhile(cont, ray1) |> first
+        index2 = dropwhile(x -> cont(x[2]), ray2) |> first |> first
 
-        if checkbounds(Bool, tracker, idx1) && checkbounds(Bool, tracker, idx2)
-            tracker[idx1], tracker[idx2] = tracker[idx2], tracker[idx1]
-            return idx1, idx2
+        if checkbounds(Bool, tracker, index1) &&
+           checkbounds(Bool, tracker, index2)
+            val1, val2 = tracker[index1], tracker[index2]
+            token1 = update_corrfns!(tracker, val2, index1)
+            token2 = update_corrfns!(tracker, val1, index2)
+            return token1, token2
         end
     end
 end
@@ -113,8 +117,7 @@ function modify!(tracker :: AbstractArray, :: InterfaceFlipper)
         index = dropwhile(cont, ray) |> first
 
         if checkbounds(Bool, tracker, index)
-            tracker[index] = 1 - tracker[index]
-            return index
+            return update_corrfns!(tracker, 1 - tracker[index], index)
         end
     end
 end
@@ -192,7 +195,7 @@ function flip_and_update_histogram!(tracker  :: AbstractArray{T, N},
         histogram[n_neighbor + 1] += 1
     end
 
-    return nothing
+    return index
 end
 
 function modify!(tracker :: AbstractArray, modifier :: ImprovedRandomFlipper)
@@ -206,27 +209,23 @@ function modify!(tracker :: AbstractArray, modifier :: ImprovedRandomFlipper)
         index = rand(indices)
         if n == count_dpn(tracker, index)
             @assert histogram[n+1] > 0
-            flip_and_update_histogram!(tracker, modifier, index)
-            return index
+            return flip_and_update_histogram!(tracker, modifier, index)
         end
     end
 end
 
-rollback!(tracker :: AbstractArray, modifier :: ImprovedRandomFlipper, state :: CartesianIndex) =
+reject!(tracker :: AbstractArray, modifier :: ImprovedRandomFlipper, state :: CartesianIndex) =
     flip_and_update_histogram!(tracker, modifier, state)
 
 # ? FIXME: Maybe invent some trait here, like ModifierType?
-function rollback!(tracker :: AbstractArray,
-                   _       :: AbstractModifier,
-                   state   :: Tuple{CartesianIndex, CartesianIndex})
-    index1, index2 = state
-    tracker[index1], tracker[index2] = tracker[index2], tracker[index1]
+function reject!(tracker :: AbstractArray,
+                 _       :: AbstractModifier,
+                 state   :: NTuple{2, RollbackToken})
+    rollback!(tracker, state[2])
+    rollback!(tracker, state[1])
     return nothing
 end
 
-function rollback!(tracker :: AbstractArray,
-                   _       :: AbstractModifier,
-                   state   :: CartesianIndex)
-    tracker[state] = 1 - tracker[state]
-    return nothing
-end
+reject!(tracker :: AbstractArray,
+        _       :: AbstractModifier,
+        state   :: RollbackToken) = rollback!(tracker, state)
