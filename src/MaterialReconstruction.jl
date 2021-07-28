@@ -20,7 +20,7 @@ export
     euclid_directional,
     euclid_mean_weighted,
     euclid_directional_weighted,
-    čapek_cost, čapek_cost_ss,
+    čapek_cost, generalized_čapek_cost,
     # Initialization
     initialize_random,
     initialize_spheres,
