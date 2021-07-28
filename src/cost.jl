@@ -28,7 +28,7 @@ end
     euclid_mean(data1 :: CorrelationData, data2 :: CorrelationData)
     euclid_mean(data1 :: CorrelationTracker, data2 :: CorrelationTracker)
 
-Calculate euclidean distance between values of two correlation
+Calculate squared euclidean distance between values of two correlation
 functions (represented as `CorrelationData` object) or two systems
 (represented as `CorrelationTracker` object). The values are averaged
 along all directions before calculation.
@@ -47,7 +47,7 @@ euclid_mean(data1 :: CorrelationTracker{T, N},
     euclid_directional(data1 :: CorrelationData, data2 :: CorrelationData)
     euclid_directional(data1 :: CorrelationTracker, data2 :: CorrelationTracker)
 
-Calculate euclidean distance between values of two correlation
+Calculate squared euclidean distance between values of two correlation
 functions (represented as `CorrelationData` object) or two systems
 (represented as `CorrelationTracker` object). The values calculated
 along different directions are not averaged and treated separately.
@@ -68,7 +68,7 @@ end
 """
     euclid_mean_weighted(data1 :: CorrelationTracker, data2 :: CorrelationTracker)
 
-Calculate euclidean distance between values of two correlation
+Calculate squared euclidean distance between values of two correlation
 functions (represented as `CorrelationData` object) or two systems
 (represented as `CorrelationTracker` object). The values are averaged
 along all directions before calculation.
@@ -90,7 +90,7 @@ end
 """
     euclid_directional_weighted(data1 :: CorrelationTracker, data2 :: CorrelationTracker)
 
-Calculate euclidean distance between values of two correlation
+Calculate squared euclidean distance between values of two correlation
 functions (represented as `CorrelationData` object) or two systems
 (represented as `CorrelationTracker` object). The values calculated
 along different directions are not averaged and treated separately.
