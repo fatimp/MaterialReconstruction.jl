@@ -26,12 +26,12 @@ export
     initialize_spheres,
     # Modifier types
     AbstractModifier,
-    Swapper, Flipper,
+    Swapper, Flipper, DPNFlipper,
     modify!, reject!,
     # Sampler types
     AbstractSampler,
     UniformSampler, InterfaceSampler,
-    DPNSampler, sample,
+    sample,
     # Cooldown schedules
     exponential_cooldown,
     aarts_korst_cooldown,
