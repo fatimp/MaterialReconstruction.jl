@@ -30,10 +30,10 @@ end
 
     #alltogether = product(modifiers, costs, initializers, cooldowns)
 
-    alltogether = product((InterfaceFlipper(), InterfaceSwapper()),
+    alltogether = product((Flipper(InterfaceSampler()), Swapper(InterfaceSampler())),
                           (euclid_directional, euclid_mean),
                           (initialize_spheres,),
-                          (aarts_korst_cooldown(),))
+                          (aarts_korst_cooldown(), exponential_cooldown()))
 
     foreach(alltogether) do prod
         modifier, cost, initializer, cooldown = prod

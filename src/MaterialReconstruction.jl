@@ -24,12 +24,14 @@ export
     # Initialization
     initialize_random,
     initialize_spheres,
-    # Modifier structures
+    # Modifier types
     AbstractModifier,
-    RandomSwapper, RandomFlipper,
-    InterfaceSwapper, InterfaceFlipper,
-    ImprovedRandomFlipper,
+    Swapper, Flipper,
     modify!, reject!,
+    # Sampler types
+    AbstractSampler,
+    UniformSampler, InterfaceSampler,
+    DPNSampler, sample,
     # Cooldown schedules
     exponential_cooldown,
     aarts_korst_cooldown,
