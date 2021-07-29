@@ -26,11 +26,11 @@ export
     initialize_spheres,
     # Modifier types
     AbstractModifier,
-    Swapper, Flipper, DPNFlipper,
+    Swapper, Flipper,
     modify!, reject!,
     # Sampler types
     AbstractSampler,
-    UniformSampler, InterfaceSampler,
+    UniformSampler, InterfaceSampler, DPNSampler,
     sample, update_pre!, update_post!,
     # Cooldown schedules
     exponential_cooldown,
