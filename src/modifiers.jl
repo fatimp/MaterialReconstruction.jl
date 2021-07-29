@@ -82,6 +82,47 @@ See also: [`UniformSampler`](@ref), [`InterfaceSampler`](@ref),
 DPNFlipper(tracker :: CorrelationTracker, α :: Float64) =
     DPNFlipper(dpn_histogram(tracker), α)
 
+# Interface
+
+"""
+    sample(array, sampler)
+
+Get a random sample from the array. This function must return an
+index, e.g. `CartesianIndex`.
+"""
+function sample end
+
+"""
+update_pre!(array, index, sampler)
+
+Update the state of sampler before the value `array[index]` is
+changed. Should only be implemented for stateful samplers.
+"""
+function update_pre! end
+
+"""
+update_post!(array, index, sampler)
+
+Update the state of sampler after the value `array[index]` is
+changed. Should only be implemented for stateful samplers.
+"""
+function update_post! end
+
+"""
+    modify!(array, modifier)
+
+Randomly modify the array. This function must return a state used in
+`reject!` to bring the array to a previous state if this modification
+is rejected.
+"""
+function modify! end
+
+"""
+    reject!(array, modifier, state)
+
+Bring the array back to the previous state.
+"""
+
 # Methods
 
 sample(tracker :: AbstractArray, :: UniformSampler) =

@@ -31,7 +31,7 @@ export
     # Sampler types
     AbstractSampler,
     UniformSampler, InterfaceSampler,
-    sample,
+    sample, update_pre!, update_post!,
     # Cooldown schedules
     exponential_cooldown,
     aarts_korst_cooldown,
