@@ -64,9 +64,9 @@ end
 function draw_sphere!(array  :: AbstractArray{T, N},
                       center :: CartesianIndex{N},
                       R      :: Float64) where {T, N}
-    R = R |> floor |> Int
+    Ri = R |> round |> Int
 
-    sphere_indices = CartesianIndices(Tuple(-R:R for i in 1:N))
+    sphere_indices = CartesianIndices(Tuple(-Ri:Ri for i in 1:N))
     foreach(sphere_indices) do point
         dist = mapreduce(x -> x^2, +, Tuple(point))
         coord = point + center
