@@ -187,9 +187,10 @@ function neighbors_for_update(histogram :: Vector{Int}, α :: Float64)
     return findfirst(x -> r < x, prob) - 1
 end
 
-function update_pre!(array   :: AbstractArray{T, N},
-                     index   :: CartesianIndex{N},
-                     sampler :: DPNSampler) where {T, N}
+function update_histogram!(array   :: AbstractArray{T, N},
+                           index   :: CartesianIndex{N},
+                           sampler :: DPNSampler,
+                           fn      :: Function) where {T, N}
     histogram = sampler.histogram
 
     indices = CartesianIndices(array)
@@ -198,24 +199,19 @@ function update_pre!(array   :: AbstractArray{T, N},
 
     for idx in max(index - uidx, fidx):min(index + uidx, lidx)
         n_neighbor = count_dpn(array, idx)
-        histogram[n_neighbor + 1] -= 1
+        histogram[n_neighbor + 1] = fn(histogram[n_neighbor + 1])
     end
 end
 
-function update_post!(array   :: AbstractArray{T, N},
-                      index   :: CartesianIndex{N},
-                      sampler :: DPNSampler) where {T, N}
-    histogram = sampler.histogram
+update_pre!(array   :: AbstractArray{T, N},
+            index   :: CartesianIndex{N},
+            sampler :: DPNSampler) where {T, N} =
+                update_histogram!(array, index, sampler, x -> x - 1)
 
-    indices = CartesianIndices(array)
-    fidx, lidx = first(indices), last(indices)
-    uidx = oneunit(fidx)
-
-    for idx in max(index - uidx, fidx):min(index + uidx, lidx)
-        n_neighbor = count_dpn(array, idx)
-        histogram[n_neighbor + 1] += 1
-    end
-end
+update_post!(array   :: AbstractArray{T, N},
+             index   :: CartesianIndex{N},
+             sampler :: DPNSampler) where {T, N} =
+                 update_histogram!(array, index, sampler, x -> x + 1)
 
 function sample(array :: AbstractArray, sampler :: DPNSampler)
     histogram = sampler.histogram
@@ -233,28 +229,40 @@ function sample(array :: AbstractArray, sampler :: DPNSampler)
     end
 end
 
-function modify!(array :: AbstractArray, modifier :: Flipper)
-    sampler = modifier.sampler
-    index   = sample(array, modifier.sampler)
-
+# Update correlation functions and sampler state
+function update_all!(array   :: AbstractArray{T, N},
+                     sampler :: AbstractSampler,
+                     index   :: CartesianIndex{N},
+                     val) where {T, N}
     update_pre!(array, index, sampler)
-    token = update_corrfns!(array, 1 - array[index], index)
+    token = update_corrfns!(array, val, index)
     update_post!(array, index, sampler)
 
     return token
 end
 
-function reject!(array  :: AbstractArray,
-                 modifier :: Flipper,
-                 state    :: RollbackToken)
-    sampler = modifier.sampler
-
-    update_pre!(array, state.index, sampler)
-    rollback!(array, state)
-    update_post!(array, state.index, sampler)
+# Rollback correlation functions and sampler state
+function reject_all!(array   :: AbstractArray{T, N},
+                     sampler :: AbstractSampler,
+                     token   :: RollbackToken) where {T, N}
+    update_pre!(array, token.index, sampler)
+    rollback!(array, token)
+    update_post!(array, token.index, sampler)
 
     return nothing
 end
+
+function modify!(array :: AbstractArray, modifier :: Flipper)
+    sampler = modifier.sampler
+    index   = sample(array, modifier.sampler)
+
+    return update_all!(array, sampler, index, 1 - array[index])
+end
+
+reject!(array    :: AbstractArray,
+        modifier :: Flipper,
+        state    :: RollbackToken) =
+            reject_all!(array, modifier.sampler, state)
 
 function modify!(array :: AbstractArray, modifier :: Swapper)
     sampler = modifier.sampler
@@ -265,13 +273,8 @@ function modify!(array :: AbstractArray, modifier :: Swapper)
         index2 = sample(array, modifier.sampler)
         val2 = array[index2]
         if val1 ≠ val2
-            update_pre!(array, index1, sampler)
-            token1 = update_corrfns!(array, val2, index1)
-            update_post!(array, index1, sampler)
-
-            update_pre!(array, index2, sampler)
-            token2 = update_corrfns!(array, val1, index2)
-            update_post!(array, index2, sampler)
+            token1 = update_all!(array, sampler, index1, val2)
+            token2 = update_all!(array, sampler, index2, val1)
             return token1, token2
         end
     end
@@ -283,13 +286,6 @@ function reject!(array    :: AbstractArray,
     token1, token2 = state
     sampler = modifier.sampler
 
-    update_pre!(array, token2.index, sampler)
-    rollback!(array, token2)
-    update_post!(array, token2.index, sampler)
-
-    update_pre!(array, token1.index, sampler)
-    rollback!(array, token1)
-    update_post!(array, token1.index, sampler)
-
-    return nothing
+    reject_all!(array, sampler, token2)
+    reject_all!(array, sampler, token1)
 end
