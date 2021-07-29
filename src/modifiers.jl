@@ -125,6 +125,10 @@ Bring the array back to the previous state.
 
 # Methods
 
+# Stateless samples do not have to implement this
+update_pre!( :: Any, :: Any, :: AbstractSampler) = nothing
+update_post!(:: Any, :: Any, :: AbstractSampler) = nothing
+
 sample(tracker :: AbstractArray, :: UniformSampler) =
     tracker |> CartesianIndices |> rand
 
@@ -147,34 +151,63 @@ function sample(tracker :: AbstractArray, :: InterfaceSampler)
 end
 
 function modify!(tracker :: AbstractArray, modifier :: Flipper)
-    index = sample(tracker, modifier.sampler)
-    return update_corrfns!(tracker, 1 - tracker[index], index)
+    sampler = modifier.sampler
+    index   = sample(tracker, modifier.sampler)
+
+    update_pre!(tracker, index, sampler)
+    token = update_corrfns!(tracker, 1 - tracker[index], index)
+    update_post!(tracker, index, sampler)
+
+    return token
 end
 
-reject!(tracker :: AbstractArray,
-        _       :: Flipper,
-        state   :: RollbackToken) = rollback!(tracker, state)
+function reject!(tracker  :: AbstractArray,
+                 modifier :: Flipper,
+                 state    :: RollbackToken)
+    sampler = modifier.sampler
+
+    update_pre!(tracker, state.index, sampler)
+    rollback!(tracker, state)
+    update_post!(tracker, state.index, sampler)
+
+    return nothing
+end
 
 function modify!(tracker :: AbstractArray, modifier :: Swapper)
-    index1 = sample(tracker, modifier.sampler)
+    sampler = modifier.sampler
+    index1 = sample(tracker, sampler)
     val1 = tracker[index1]
 
     while true
         index2 = sample(tracker, modifier.sampler)
         val2 = tracker[index2]
         if val1 ≠ val2
+            update_pre!(tracker, index1, sampler)
             token1 = update_corrfns!(tracker, val2, index1)
+            update_post!(tracker, index1, sampler)
+
+            update_pre!(tracker, index2, sampler)
             token2 = update_corrfns!(tracker, val1, index2)
+            update_post!(tracker, index2, sampler)
             return token1, token2
         end
     end
 end
 
-function reject!(tracker :: AbstractArray,
-                 _       :: Swapper,
-                 state   :: NTuple{2, RollbackToken})
-    rollback!(tracker, state[2])
-    rollback!(tracker, state[1])
+function reject!(tracker  :: AbstractArray,
+                 modifier :: Swapper,
+                 state    :: NTuple{2, RollbackToken})
+    token1, token2 = state
+    sampler = modifier.sampler
+
+    update_pre!(tracker, token2.index, sampler)
+    rollback!(tracker, token2)
+    update_post!(tracker, token2.index, sampler)
+
+    update_pre!(tracker, token1.index, sampler)
+    rollback!(tracker, token1)
+    update_post!(tracker, token1.index, sampler)
+
     return nothing
 end
 
