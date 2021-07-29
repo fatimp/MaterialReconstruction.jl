@@ -1,13 +1,3 @@
-function initialize_tracker(array  :: AbstractArray{T, N},
-                            target :: CorrelationTracker{T, N}) where {T, N}
-    # Create CorrelationTracker for the system being annealed
-    return CorrelationTracker(array;
-                              tracking   = target |> tracked_data |> collect,
-                              periodic   = target.periodic,
-                              directions = tracked_directions(target),
-                              len        = tracked_length(target))
-end
-
 """
     initialize_random(target :: CorrelationTracker, shape)
 
@@ -43,7 +33,7 @@ function initialize_random(target :: CorrelationTracker{T, N},
         end
     end
 
-    return initialize_tracker(array, target)
+    return CorrelationTracker(array, target)
 end
 
 """
@@ -59,5 +49,5 @@ function initialize_spheres(target :: CorrelationTracker{T, N},
                             λ0     :: Float64 = 1e-3) where {T, N}
     R, λ = spheres_parameters(target, R0, λ0)
     spheres = generate_spheres(shape, T, R, λ)
-    return initialize_tracker(spheres, target)
+    return CorrelationTracker(spheres, target)
 end
