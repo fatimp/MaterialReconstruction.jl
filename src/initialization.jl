@@ -1,11 +1,11 @@
 """
-    initialize_random(target :: CorrelationTracker, shape)
+    initialize_random(target :: CorrelationTracker[, shape])
 
-Initialize a system for the annealing procedure. The system is be
-filled with random data, but porosity of the target is preserved.
+Initialize a system for the annealing procedure. The system is to be
+filled with random data, so the porosity of the target is preserved.
 """
 function initialize_random(target :: CorrelationTracker{T, N},
-                           shape  :: NTuple{N, Int}) where {T, N}
+                           shape  :: NTuple{N, Int} = size(target)) where {T, N}
     # The porosity may be already calculated as $S^1_2(0)$ or
     # $L^1_2(0)$, but what if we do not use these functions for
     # reconstruction? Better to recalculate it again, it's fast.
@@ -37,16 +37,16 @@ function initialize_random(target :: CorrelationTracker{T, N},
 end
 
 """
-    initialize_spheres(tracker :: CorrelationTracker, shape)
+    initialize_spheres(tracker :: CorrelationTracker[, shape])
 
-Initialize a system for the annealing procedure. The system is be
+Initialize a system for the annealing procedure. The system is to be
 filled with random spheres so its two-point correlation function for
 the void phase is as close as possible to the target's one.
 """
-function initialize_spheres(target :: CorrelationTracker{T, N},
-                            shape  :: NTuple{N, Int},
-                            R0     :: Float64 = 10.0,
-                            λ0     :: Float64 = 1e-3) where {T, N}
+function initialize_spheres(target :: CorrelationTracker{T, N};
+                            shape  :: NTuple{N, Int}  = size(target),
+                            R0     :: Float64         = 10.0,
+                            λ0     :: Float64         = 1e-3) where {T, N}
     R, λ = spheres_parameters(target, R0, λ0)
     spheres = generate_spheres(shape, T, R, λ)
     return CorrelationTracker(spheres, target)

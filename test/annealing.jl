@@ -1,5 +1,5 @@
 function test_annealing(target, init, cost, modifier, cooldown)
-    system = init(target, (1000, 1000))
+    system = init(target)
     furnace = Furnace(system, target; T0 = 2e-4)
     c0 = euclid_directional(system, target)
 

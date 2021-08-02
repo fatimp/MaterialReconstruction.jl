@@ -112,12 +112,14 @@ end
 """
     generalized_čapek_cost(tracker1, tracker2, dict)
 
-Returns a function which calculates the cost as based on S₂, L₂ for
-solid phase and any other functions present in `keys(dict)`. `dict` is
-a dictionary which includes key-value pairs `AbstractTracker =>
-Float64`. Values of `dict` must be in range [0, 1]. They control
-initial contribution of the corresponding correlation functions. The
-smaller these values are the smaller is initial contribution.
+Returns a function which calculates the cost based on two-point and
+lineal-path functions for solid phase and any other functions present
+in `keys(dict)`. `dict` is a dictionary which includes key-value pairs
+`AbstractTracker => Float64`. Values of `dict` must be in range
+`[0, 1]`. They control an initial contribution of the corresponding
+correlation function. The smaller these values are the smaller is
+initial contribution. Contributions of all correlation functions
+equivalizes when the cost function becomes smaller.
 """
 function generalized_čapek_cost(data1 :: CorrelationTracker{T, N},
                                 data2 :: CorrelationTracker{T, N},
@@ -154,9 +156,10 @@ end
 """
     čapek_cost(data1 :: CorrelationTracker, data2 :: CorrelationTracker, η = 0.6)
 
-Returns a function which calculates the cost as based on S₂ and L₂ for
-solid and void phases where contribution of L₂ for void phase
-increases with time.
+Returns a function which calculates the cost based on two-point
+correlation function for void phase  and lineal-path function for
+solid and void phases where contribution of the latter increases with
+time.
 """
 čapek_cost(data1 :: CorrelationTracker{T, N},
            data2 :: CorrelationTracker{T, N},
