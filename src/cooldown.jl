@@ -24,7 +24,7 @@ Combinatorial Optimization and Neural Computing. John Wiley & Sons,
 Chichester.
 """
 function aarts_korst_cooldown(;n :: Integer = 15, λ :: Float64 = 0.01)
-    costs = Vector{Float64}(undef, steps)
+    costs = Vector{Float64}(undef, n)
     counter = 1
 
     function f(T :: Float64, cost :: Float64)
