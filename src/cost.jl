@@ -118,8 +118,8 @@ in `keys(dict)`. `dict` is a dictionary which includes key-value pairs
 `AbstractTracker => Float64`. Values of `dict` must be in range
 `[0, 1]`. They control an initial contribution of the corresponding
 correlation function. The smaller these values are the smaller is
-initial contribution. Contributions of all correlation functions
-equivalizes when the cost function becomes smaller.
+the initial contribution. Contributions of all correlation functions
+equivalizes when the cost function becomes small.
 """
 function generalized_čapek_cost(data1 :: CorrelationTracker{T, N},
                                 data2 :: CorrelationTracker{T, N},

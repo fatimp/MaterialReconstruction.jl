@@ -5,7 +5,7 @@
 pixels) during annealing process.
 
 See also: [`UniformSampler`](@ref), [`InterfaceSampler`](@ref),
-[`DPNFlipper`](@ref).
+[`DPNSampler`](@ref).
 """
 abstract type AbstractSampler end
 
@@ -16,18 +16,18 @@ Create a sampler which picks samples randomly with uniform
 distribution.
 
 See also: [`AbstractSampler`](@ref), [`InterfaceSampler`](@ref),
-[`DPNFlipper`](@ref).
+[`DPNSampler`](@ref).
 """
 struct UniformSampler <: AbstractSampler end
 
 """
     InterfaceSampler()
 
-Create a sampler which picks samples randomly from two-phase
-interface.
+Create a sampler which picks samples randomly from an interface
+between phases.
 
 See also: [`UniformSampler`](@ref), [`AbstractSampler`](@ref),
-[`DPNFlipper`](@ref).
+[`DPNSampler`](@ref).
 """
 struct InterfaceSampler <: AbstractSampler end
 
@@ -61,7 +61,8 @@ abstract type AbstractModifier end
 """
     Flipper(sampler)
 
-Create a modifier which flips phase of a sample during annealing.
+Create a modifier which changes phase of a sample taken from a binary
+array.
 
 See also: [`AbstractModifier`](@ref), [`Swapper`](@ref).
 """
@@ -72,7 +73,8 @@ end
 """
     Swapper(sampler)
 
-Create a modifier which swaps phases of two samples during annealing.
+Create a modifier which takes two samples having different phases and
+swaps phases of these two samples.
 
 See also: [`Flipper`](@ref), [`AbstractModifier`](@ref).
 """
@@ -91,7 +93,7 @@ index, e.g. `CartesianIndex`.
 function sample end
 
 """
-update_pre!(array, index, sampler)
+    update_pre!(array, index, sampler)
 
 Update the state of sampler before the value `array[index]` is
 changed. Should only be implemented for stateful samplers.
@@ -99,7 +101,7 @@ changed. Should only be implemented for stateful samplers.
 function update_pre! end
 
 """
-update_post!(array, index, sampler)
+    update_post!(array, index, sampler)
 
 Update the state of sampler after the value `array[index]` is
 changed. Should only be implemented for stateful samplers.
@@ -120,6 +122,7 @@ function modify! end
 
 Bring the array back to the previous state.
 """
+function reject! end
 
 # Methods
 

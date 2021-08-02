@@ -2,18 +2,12 @@
     annealing_step(furnace[; cooldown][, cost][, modifier])
 
 Perform one step of annealing procedure. `cooldown` is a function
-defining how fast the furnace will loose temperature. `cost`
+defining how fast the furnace will lose temperature. `cost`
 determines a function we want to minimize. `modifier` determines which
 small modifications are made to the system during the step.
 
 **NB:** The updated state of the annealing process is returned by this
 function as a new `Furnace` object. Do not discard it.
-
-See also: [`euclid_mean`](@ref), [`euclid_directional`](@ref),
-[`euclid_mean_weighted`](@ref), [`euclid_directional_weighted`](@ref),
-[`RandomSwapper`](@ref), [`RandomFlipper`](@ref),
-[`InterfaceSwapper`](@ref), [`InterfaceFlipper`](@ref),
-[`exponential_cooldown`](@ref).
 """
 function annealing_step(furnace  :: Furnace;
                         cooldown :: Function         = exponential_cooldown(),

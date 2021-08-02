@@ -12,19 +12,24 @@ is calculated as $T_{n + 1} = \lambda T_{n}$.
 exponential_cooldown(λ :: Float64 = 0.999999) = (T :: Float64, :: Float64) -> λ * T
 
 """
-    aarts_korst_cooldown(;steps = 15, λ = 0.01)
+    aarts_korst_cooldown(;n = 15, λ = 0.01)
 
-Make the Aarts-Korst cooldown schedule. The temperature is changed
-each `steps` steps of annealing algorithm based on standard deviation
-of cost function and a parameter `λ`.
+Make the Aarts-Korst cooldown schedule. The temperature decreases
+each `n` steps of annealing algorithm. The higer `λ` is the faster
+decreases the temperature.
+
+For more information, see Aarts, E.H.L. and Korst, J.H.M. (1989)
+Simulated Annealing and Boltzmann Machines: A Stochastic Approach to
+Combinatorial Optimization and Neural Computing. John Wiley & Sons,
+Chichester.
 """
-function aarts_korst_cooldown(;steps :: Integer = 15, λ :: Float64 = 0.01)
+function aarts_korst_cooldown(;n :: Integer = 15, λ :: Float64 = 0.01)
     costs = Vector{Float64}(undef, steps)
     counter = 1
 
     function f(T :: Float64, cost :: Float64)
         costs[counter] = cost
-        counter = mod1(counter + 1, steps)
+        counter = mod1(counter + 1, n)
 
         newT = T
         if counter == 1
@@ -39,17 +44,19 @@ function aarts_korst_cooldown(;steps :: Integer = 15, λ :: Float64 = 0.01)
 end
 
 """
-    frost_heinemann_cooldown(;minimal_steps = 250, λ = 0.01)
+    frost_heineman_cooldown(;n = 250, λ = 0.01)
 
-Make the Frost-Heinemann cooldown schedule. The temperature is changed
-each `steps` steps of annealing algorithm or until some "target"
-energy is reached which is based on standard deviation of cost
+Make the Frost-Heineman cooldown schedule. The temperature decreases
+each `n` steps of annealing algorithm or until some "target" energy is
+reached. The target energy is based on standard deviation of the cost
 function and a parameter `λ`.
+
+For more information, see R. Frost, P. Heineman "Simulated Annealing:
+A Heuristic for Parallel Stochastic Optimization" (1997)
 """
-function frost_heineman_cooldown(;minimal_steps :: Integer = 250, λ :: Float64 = 0.01)
+function frost_heineman_cooldown(;n :: Integer = 250, λ :: Float64 = 0.01)
     costs = Vector{Float64}(undef, 0)
-    sizehint!(costs, minimal_steps)
-    target_prev = 0.0
+    sizehint!(costs, n)
     target = Inf
 
     function f(T :: Float64, cost :: Float64)
@@ -57,7 +64,7 @@ function frost_heineman_cooldown(;minimal_steps :: Integer = 250, λ :: Float64 
         newT = T
 
         μ = mean(costs)
-        if length(costs) == minimal_steps && μ < target
+        if length(costs) == n && μ < target
             σ = std(costs)
             empty!(costs)
 
