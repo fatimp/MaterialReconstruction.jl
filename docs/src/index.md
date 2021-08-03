@@ -188,3 +188,30 @@ annealing_step
 ```
 
 ## Examples
+
+All following examples are reconstructed from two-point and lineal-path
+functions calculated in axial and diagonal directions.
+
+### Value noise (small details)
+
+|   Original  |  Reconstruction  |
+|-------------|------------------|
+| ![](../images/value-noise2.png) | ![](../images/value-noise2-recon-diag-s2l2.png) |
+
+### Value noise (big details)
+
+|   Original  |  Reconstruction  |
+|-------------|------------------|
+| ![](../images/value-noise3.png) | ![](../images/value-noise3-recon-diag-s2l2.png) |
+
+### Checkboard
+
+|   Original  |  Reconstruction  |
+|-------------|------------------|
+| ![](../images/checkboard.png) | ![](../images/checkboard-recon-diag-s2l2.png) |
+
+### Sample from digitalrocksportal.org
+
+|   Original  |  Reconstruction  |
+|-------------|------------------|
+| ![](../images/image1.png) | ![](../images/image1-recon-diag-s2l2.png) |
