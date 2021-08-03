@@ -21,7 +21,7 @@ using Random
 
 Random.seed!(123)
 # Load a binary array we want to reconstruct
-array = load("../images/value-noise.png") .|> Bool
+array = load("images/value-noise.png") .|> Bool
 # Choose correlation functions we want to track (S2 for void phase, L2 for both phases)
 functions = [S2Tracker(false), L2Tracker(false), L2Tracker(true)]
 # Create an instance of CorrelationTracker type. Correlation functions are calculated
@@ -196,22 +196,22 @@ functions calculated in axial and diagonal directions.
 
 |   Original  |  Reconstruction  |
 |-------------|------------------|
-| ![](../images/value-noise2.png) | ![](../images/value-noise2-recon-diag-s2l2.png) |
+| ![](images/value-noise2.png) | ![](images/value-noise2-recon-diag-s2l2.png) |
 
 ### Value noise (big details)
 
 |   Original  |  Reconstruction  |
 |-------------|------------------|
-| ![](../images/value-noise3.png) | ![](../images/value-noise3-recon-diag-s2l2.png) |
+| ![](images/value-noise3.png) | ![](images/value-noise3-recon-diag-s2l2.png) |
 
 ### Checkboard
 
 |   Original  |  Reconstruction  |
 |-------------|------------------|
-| ![](../images/checkboard.png) | ![](../images/checkboard-recon-diag-s2l2.png) |
+| ![](images/checkboard.png) | ![](images/checkboard-recon-diag-s2l2.png) |
 
 ### Sample from digitalrocksportal.org
 
 |   Original  |  Reconstruction  |
 |-------------|------------------|
-| ![](../images/image1.png) | ![](../images/image1-recon-diag-s2l2.png) |
+| ![](images/image1.png) | ![](images/image1-recon-diag-s2l2.png) |
