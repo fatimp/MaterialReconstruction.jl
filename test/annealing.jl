@@ -3,7 +3,7 @@ function test_annealing(target, init, cost, modifier, cooldown)
     furnace = Furnace(system, target; T0 = 2e-4)
     c0 = euclid_directional(system, target)
 
-    for i in 1:5000
+    for i in 1:10000
         furnace = annealing_step(furnace;
                                  cost     = cost,
                                  modifier = modifier,
