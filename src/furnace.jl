@@ -1,6 +1,6 @@
-struct Furnace{T, N}
-    system      :: CorrelationTracker{T, N}
-    target      :: CorrelationTracker{T, N}
+struct Furnace{A1 <: AbstractArray, A2 <: AbstractArray}
+    system      :: A1
+    target      :: A2
     temperature :: Float64
     steps       :: Int
     rejected    :: Int
@@ -10,16 +10,15 @@ struct Furnace{T, N}
 end
 
 """
-    Furnace(system :: CorrelationTracker, target :: CorrelationTracker; T0)
+    Furnace(system :: AbstractArray, target :: AbstractArray; T0)
 
 Initialize a furnace (an object which is used in annealing
-process). `system` is a system being reconstructed. `target` holds
-desired values of correlation functions. `T0` is an initial
-temperature of a furnace.
+process). `system` is an array being reconstructed to be similar to
+`target`. `T0` is an initial temperature of a furnace.
 """
-Furnace(system :: CorrelationTracker{T, N},
-        target :: CorrelationTracker{T, N};
-        T0     :: Float64) where {T, N} =
+Furnace(system :: A1,
+        target :: A2;
+        T0     :: Float64) where {A1 <: AbstractArray, A2 <: AbstractArray} =
             Furnace(system, target, T0, 0, 0, 0)
 
 Base.show(io :: IO, furnace :: Furnace) = begin

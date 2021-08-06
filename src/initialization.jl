@@ -1,11 +1,11 @@
 """
-    initialize_random(target :: CorrelationTracker[, shape])
+    initialize_random(target :: AbstractArray[, shape])
 
 Initialize a system for the annealing procedure. The system is to be
 filled with random data in such a way that the porosity of the
 `target` is preserved.
 """
-function initialize_random(target :: CorrelationTracker{T, N},
+function initialize_random(target :: AbstractArray{T, N},
                            shape  :: NTuple{N, Int} = size(target)) where {T, N}
     # The porosity may be already calculated as $S^1_2(0)$ or
     # $L^1_2(0)$, but what if we do not use these functions for
@@ -34,21 +34,20 @@ function initialize_random(target :: CorrelationTracker{T, N},
         end
     end
 
-    return CorrelationTracker(array, target)
+    return array
 end
 
 """
-    initialize_spheres(target :: CorrelationTracker[, shape])
+    initialize_spheres(target :: AbstractArray[, shape])
 
 Initialize a system for the annealing procedure. The system is to be
 filled with random spheres so its two-point correlation function for
 the void phase is as close as possible to the `target`'s one.
 """
-function initialize_spheres(target :: CorrelationTracker{T, N};
+function initialize_spheres(target :: AbstractArray{T, N};
                             shape  :: NTuple{N, Int}  = size(target),
                             R0     :: Float64         = 10.0,
                             λ0     :: Float64         = 1e-3) where {T, N}
     R, λ = spheres_parameters(target, R0, λ0)
-    spheres = generate_spheres(shape, T, R, λ)
-    return CorrelationTracker(spheres, target)
+    return generate_spheres(shape, T, R, λ)
 end

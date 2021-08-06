@@ -4,6 +4,7 @@ authors = ["Vasily Postnicov <shamaz.mazum@gmail.com>"]
 version = "0.1.2"
 
 [deps]
+AnnealingRollbackAPI = "3f8dbd83-b3d8-41db-b5ba-bb99f7499db6"
 CorrelationFunctions = "cd8c4018-4f35-43b7-8520-d042ebaeaa2d"
 CorrelationTrackers = "2aaf3720-2af0-4ca4-b7d9-7d970023fcad"
 LsqFit = "2fda8390-95c7-5789-9bda-21331edee243"
@@ -11,8 +12,9 @@ PoissonRandom = "e409e4f3-bfea-5376-8464-e040bb5c01ab"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
+AnnealingRollbackAPI = "0.1.0"
 CorrelationFunctions = "0.3.0"
-CorrelationTrackers = "0.5.4"
+CorrelationTrackers = "0.6.0"
 LsqFit = "0.12"
 PoissonRandom = "0.4"
 julia = "^1.0"

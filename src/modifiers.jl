@@ -247,7 +247,7 @@ end
 # Rollback correlation functions and sampler state
 function reject_all!(array   :: AbstractArray{T, N},
                      sampler :: AbstractSampler,
-                     token   :: RollbackToken) where {T, N}
+                     token   :: AbstractRollbackToken) where {T, N}
     update_pre!(array, token.index, sampler)
     rollback!(array, token)
     update_post!(array, token.index, sampler)
@@ -264,7 +264,7 @@ end
 
 reject!(array    :: AbstractArray,
         modifier :: Flipper,
-        state    :: RollbackToken) =
+        state    :: AbstractRollbackToken) =
             reject_all!(array, modifier.sampler, state)
 
 function modify!(array :: AbstractArray, modifier :: Swapper)
@@ -285,7 +285,7 @@ end
 
 function reject!(array    :: AbstractArray,
                  modifier :: Swapper,
-                 state    :: NTuple{2, RollbackToken})
+                 state    :: NTuple{2, AbstractRollbackToken})
     token1, token2 = state
     sampler = modifier.sampler
 

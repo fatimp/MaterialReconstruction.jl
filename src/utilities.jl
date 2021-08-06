@@ -51,13 +51,13 @@ function s2_theory(r, R, λ, :: Val{3})
 end
 
 # Search for the best parameters for random spheres
-function spheres_parameters(target :: CorrelationTracker{T, N},
+function spheres_parameters(target :: AbstractArray{T, N},
                             R0     :: Float64,
                             λ0     :: Float64) where {T, N}
     @. model(x, p) = s2_theory(x, p[1], p[2], Val(N))
-    length = tracked_length(target)
-    r = range(0.0; length = length)
-    fit = curve_fit(model, r, Directional.s2(target, 0) |> mean, [R0, λ0])
+    s2 = Directional.s2(target, 0) |> mean
+    r = range(0.0; length = length(s2))
+    fit = curve_fit(model, r, s2, [R0, λ0])
     return coef(fit)
 end
 

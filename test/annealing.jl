@@ -1,6 +1,6 @@
 function test_annealing(target, init, cost, modifier, cooldown)
-    system = init(target)
-    furnace = Furnace(system, target; T0 = 2e-4)
+    system = CorrelationTracker(target |> init, target)
+    furnace = Furnace(system, target; T0 = 1e-4)
     c0 = euclid_directional(system, target)
 
     for i in 1:10000
