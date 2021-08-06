@@ -1,7 +1,6 @@
 module MaterialReconstruction
 using CorrelationFunctions.Directional
-using CorrelationTrackers
-using AnnealingRollbackAPI: AbstractRollbackToken
+using AnnealingAPI
 using Base.Iterators
 using Statistics: mean, std
 using LsqFit: curve_fit, coef
