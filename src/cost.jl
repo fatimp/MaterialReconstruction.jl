@@ -35,9 +35,9 @@ along all directions before calculation.
 """
 function euclid_mean end
 
-euclid_mean(data1 :: CorrelationData{T},
-            data2 :: CorrelationData{T}) where T =
-    metric(data1 |> mean, data2 |> mean)
+euclid_mean(data1 :: CorrelationData,
+            data2 :: CorrelationData) =
+                metric(data1 |> mean, data2 |> mean)
 
 euclid_mean(data1 :: AbstractArray{T, N},
             data2 :: AbstractArray{T, N}) where {T, N} =
@@ -54,8 +54,8 @@ along different directions are not averaged and treated separately.
 """
 function euclid_directional end
 
-function euclid_directional(data1 :: CorrelationData{T},
-                            data2 :: CorrelationData{T}) where T
+function euclid_directional(data1 :: CorrelationData,
+                            data2 :: CorrelationData)
     @assert directions(data1) == directions(data2)
     sum(metric(data1[dir], data2[dir]) for dir in directions(data1))
 end
