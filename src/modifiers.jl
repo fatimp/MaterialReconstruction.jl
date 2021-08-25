@@ -82,6 +82,22 @@ struct Swapper{T <: AbstractSampler} <: AbstractModifier
     sampler :: T
 end
 
+struct BatchRollbackToken{T <: AbstractRollbackToken} <: AbstractRollbackToken
+    tokens :: Vector{T}
+end
+
+"""
+    BatchModifier(modifier, mods)
+
+Create a modifier which performs `mods` modifications with a modifier
+`modifier`. These modifications are then either accepted alltogether
+or rejected alltogether.
+"""
+struct BatchModifier{T <: AbstractModifier} <: AbstractModifier
+    modifier :: T
+    mods     :: Int
+end
+
 # Interface
 
 """
@@ -291,4 +307,22 @@ function reject!(array    :: AbstractArray,
 
     reject_all!(array, sampler, token2)
     reject_all!(array, sampler, token1)
+end
+
+function modify!(array :: AbstractArray, modifier :: BatchModifier)
+    m = modifier.modifier
+    n = modifier.mods
+
+    tokens = [modify!(array, m) for k in 1:n]
+    return BatchRollbackToken{tokens |> first |> typeof}(tokens)
+end
+
+function reject!(array    :: AbstractArray,
+                 modifier :: BatchModifier,
+                 state    :: BatchRollbackToken)
+    foreach(reverse(state.tokens)) do token
+        reject!(array, modifier.modifier, token)
+    end
+
+    return nothing
 end

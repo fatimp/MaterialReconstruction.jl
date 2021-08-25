@@ -26,7 +26,7 @@ export
     initialize_spheres,
     # Modifier types
     AbstractModifier,
-    Swapper, Flipper,
+    Swapper, Flipper, BatchModifier,
     modify!, reject!,
     # Sampler types
     AbstractSampler,
