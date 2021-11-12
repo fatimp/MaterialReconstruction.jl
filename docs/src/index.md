@@ -29,7 +29,7 @@ functions = [S2Tracker(false), L2Tracker(false), L2Tracker(true)]
 target = CorrelationTracker(array; tracking = functions, periodic = true)
 
 # Initialize an array to be reconstructed
-system = initialize_spheres(target)
+system = CorrelationTracker(target |> initialize_spheres, target)
 # Create an instance of Furnace. T0 is an initial temperature
 furnace = Furnace(system, target; T0 = 2e-5)
 # Choose a cost function.
