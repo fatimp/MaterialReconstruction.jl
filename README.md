@@ -7,5 +7,5 @@ Materials"
 [ISBN 978-1-4757-6357-7](https://www.springer.com/us/book/9780387951676)) using
 a procedure called "Simulated annealing".
 
-Look [here](https://shamazmazum.github.io/MaterialReconstruction.jl/dev/) for
+Look [here](https://fatimp.github.io/MaterialReconstruction.jl/stable/) for
 documentation and examples.
