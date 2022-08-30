@@ -6,4 +6,4 @@ using MaterialReconstruction
 makedocs(sitename = "MaterialReconstruction.jl documentation",
          format = Documenter.HTML(prettyurls = false))
 
-deploydocs(repo = "github.com/shamazmazum/MaterialReconstruction.jl.git")
+deploydocs(repo = "github.com/fatimp/MaterialReconstruction.jl.git")
