@@ -16,7 +16,7 @@ function test_annealing(target, init, cost, modifier, cooldown)
 end
 
 @testset "300x300 image" begin
-    array = read_cuboid("image3d.json")[:,:,1]
+    array = Utilities.read_cuboid("image3d.json")[:,:,1]
     target = CorrelationTracker(array;
                                 directions = [:x, :y, :xy, :yx],
                                 periodic   = true)
